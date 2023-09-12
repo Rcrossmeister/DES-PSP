@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="9a7f5e07-a621-4803-b21a-f9a5da9f13fa" name="更改" comment="" />
+    <list default="true" id="9a7f5e07-a621-4803-b21a-f9a5da9f13fa" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LSTM.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TS_Seq2Seq_Intro.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/reproduce/TS_Seq2Seq_Intro.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/s2s.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/seq2seq.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/seq2seq.py" beforeDir="false" afterPath="$PROJECT_DIR$/seq2seq.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -10,12 +20,32 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "history": [
+    {
+      "state": "OPEN",
+      "assignee": "c0rnP1ex"
+    }
+  ],
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "c0rnP1ex"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="cbd148b6-80c5-44e9-81f2-a8b0ba19aff6" />
+        <option name="url" value="https://github.com/Rcrossmeister/DES-PSP.git" />
+      </UrlAndAccount>
+    </option>
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 3
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
   <component name="ProjectId" id="2VHCc9uNza5j8sQaTa3BEbaRZTb" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -27,6 +57,10 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "true",
     "git-widget-placeholder": "main",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
     "settings.editor.selected.configurable": "preferences.fileTypes",
     "vue.rearranger.settings.migration": "true"
   }
@@ -40,6 +74,7 @@
       <option name="presentableId" value="Default" />
       <updated>1694483697322</updated>
       <workItem from="1694483700073" duration="3000" />
+      <workItem from="1694487819260" duration="1351000" />
     </task>
     <servers />
   </component>
