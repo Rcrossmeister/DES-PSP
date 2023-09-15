@@ -1,11 +1,27 @@
 # DES-PSP
  Double Encoder Seq2seq-Based Presidential ConceptStock Price Prediction model
 
-## Updates
+**NOTIFICATION:**
 
-- 2023.09.14
-  - modify with `argparse`
-  - `results/model/`
+_Note : Model need interface_
+
+*Note: The README Still need a further revise and implements.* 
+
+__Update:__
+
+* *A argparse interface is released. 09-015-2023*
+
+## DataSet
+
+The full dataset : ./data/raw/raw/All_Data.csv
+
+## Use
+
+* To **train** the Seq2Seq baseline model :
+
+```shell
+python main.py
+```
 
 ## Results
 
@@ -15,3 +31,15 @@
 |         |        |        |        |        |
 |         |        |        |        |        |
 
+## Citation
+
+Please cite our paper if you use it in your work:
+
+```shell
+@inproceedings{,
+   title={{}: },
+   author={},
+   booktitle={},
+   year={}
+}
+```

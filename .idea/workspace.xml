@@ -21,18 +21,25 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "history": [
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;history&quot;: [
     {
-      "state": "OPEN",
-      "assignee": "c0rnP1ex"
+      &quot;state&quot;: &quot;OPEN&quot;,
+      &quot;assignee&quot;: &quot;c0rnP1ex&quot;
     }
   ],
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "c0rnP1ex"
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;c0rnP1ex&quot;
   }
-}]]></component>
+}</component>
+  <component name="GithubProjectSettings">
+    <option name="branchProtectionPatterns">
+      <list>
+        <option value="main" />
+      </list>
+    </option>
+  </component>
   <component name="GithubPullRequestsUISettings">
     <option name="selectedUrlAndAccountId">
       <UrlAndAccount>
@@ -62,6 +69,7 @@
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.fileTypes",
     "vue.rearranger.settings.migration": "true"
   }
@@ -81,6 +89,7 @@
       <updated>1694483697322</updated>
       <workItem from="1694483700073" duration="3000" />
       <workItem from="1694487819260" duration="2084000" />
+      <workItem from="1694746317040" duration="559000" />
     </task>
     <task id="LOCAL-00001" summary="remove: unnecessary file">
       <option name="closed" value="true" />
