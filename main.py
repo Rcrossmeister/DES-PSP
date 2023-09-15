@@ -6,8 +6,32 @@ from utils import prepare_data, remove_invalid_stocks
 import os
 
 import argparse
+import time
+import logging
+
+def init_logger(log_path: str):
+    logger  = logging.getLogger()
+    # 设置日志级别和格式
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    # 获取当前日期和时间作为日志文件名的一部分
+    current_datetime = time.strftime("%Y-%m-%d_%H-%M")
+    log_file = f"{log_path}/{current_datetime}.log"
+
+    # 创建一个文件处理器，用于将日志输出到文件
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+    # 将文件处理器添加到日志记录器中
+    logger = logging.getLogger('')
+    logger.addHandler(file_handler)
+
+    return logger
 
 parser = argparse.ArgumentParser(description='Stock Price Prediction')
+parser.add_argument('--model', type=str, default='seq2seq_lstm', help='model name')
+parser.add_argument('--output_path', type=str, default='result/', help='log path')
 parser.add_argument('--df_path', type=str, default='df_path/', help='data frame path')
 # parser.add_argument('--df_path_trump', type=str, default='/home/hzj/NLP1/StockPricePrediction/2023-05-22/GroupB.csv', help='data frame path')
 # parser.add_argument('--df_path_biden', type=str, default='/home/hzj/NLP1/StockPricePrediction/2023-05-22/GroupA.csv', help='data frame path')
@@ -16,14 +40,21 @@ parser.add_argument('--data_end_date', type=str, default='2016/11/08', help='dat
 parser.add_argument('--val_start_date', type=str, default='2019/12/15', help='validation start date')
 parser.add_argument('--val_end_date', type=str, default='2020/12/14', help='validation end date')
 parser.add_argument('--pred_steps', type=int, default=14, help='prediction steps')
+parser.add_argument('--cuda', type=str, default='cuda:0', help='cuda device')
 args = parser.parse_args()
 
+current_datetime = time.strftime("%Y-%m-%d_%H-%M")
+output_path = f"{args.output_path}/{args.model}_{current_datetime}"
+
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
+
+logger = init_logger(output_path)
+
+
 df_path = os.path.join(args.df_path, "All_Data.csv")
-print(df_path)
 df_path_trump = os.path.join(args.df_path, "GroupB.csv")
-print(df_path_trump)
 df_path_biden = os.path.join(args.df_path, "GroupA.csv")
-print(df_path_biden)
 
 # df_path = '/home/hzj/NLP1/StockPricePrediction/rc_ross/All_Data.csv'
 # df_path_trump = '/home/hzj/NLP1/StockPricePrediction/2023-05-22/GroupB.csv'
@@ -57,7 +88,7 @@ target_seq = (target_seq - target_seq_mean) / target_seq_std
 
 
 # 将数据转换为PyTorch张量，并放到CUDA设备上
-device = torch.device("cuda:1")
+device = torch.device(args.cuda)
 input_seq = torch.from_numpy(input_seq).float().to(device)
 target_seq = torch.from_numpy(target_seq).float().to(device)
 
@@ -126,7 +157,19 @@ input_size = 366
 hidden_size = 64
 output_size = 14
 
-model = Seq2Seq_LSTM(input_size, hidden_size, output_size).to(device)
+if args.model == 'seq2seq_lstm':
+    model = Seq2Seq_LSTM(input_size, hidden_size, output_size).to(device)
+elif args.model == 'seq2seq_gru':
+    model = Seq2Seq_GRU(input_size, hidden_size, output_size).to(device)
+elif args.model == 'lstm':
+    model = LSTM(input_size, hidden_size, output_size).to(device)
+elif args.model == 'gru':
+    model = GRU(input_size, hidden_size, output_size).to(device)
+else:
+    print("model name error")
+    logger.error("model name error")
+    exit(0)
+
 # model = Seq2Seq_GRU(input_size, hidden_size, output_size).to(device)
 # model = LSTM(input_size, hidden_size, output_size).to(device)
 # model = GRU(input_size, hidden_size, output_size).to(device)
@@ -155,7 +198,9 @@ for epoch in range(num_epochs):
         optimizer.step()
 
     if (epoch+1) % 10 == 0:
-        print(f'Epoch: {epoch+1}/{num_epochs}, Loss: {loss.item()}')
+        # print(f'Epoch: {epoch+1}/{num_epochs}, Loss: {loss.item()}')
+        logger.info(f'Epoch: {epoch+1}/{num_epochs}, Loss: {loss.item()}')
+
 # 验证
 # 归一化验证数据
 val_input_mean = np.mean(val_input_data, axis=1, keepdims=True)
@@ -187,7 +232,8 @@ with torch.no_grad():
 
 # 计算验证损失
 val_loss = criterion(val_output_seq, val_target_seq)
-print(f'Validation Loss: {val_loss.item()}')
+# print(f'Validation Loss: {val_loss.item()}')
+logger.info(f'Validation Loss: {val_loss.item()}')
 
 # 逆归一化验证数据
 # val_output_data = val_output_seq.cpu().numpy() * val_target_std + val_target_mean
@@ -204,14 +250,18 @@ fde = np.linalg.norm(val_output_data[-1] - val_target_data[-1])
 mse = np.mean((val_output_data - val_target_data)**2)
 
 # 打印结果
-print(f'MSE: {mse:.4f}')
-print(f'MAE: {mae:.4f}')
-print(f'ADE: {ade:.4f}')
-print(f'FDE: {fde:.4f}')
+# print(f'MSE: {mse:.4f}')
+# print(f'MAE: {mae:.4f}')
+# print(f'ADE: {ade:.4f}')
+# print(f'FDE: {fde:.4f}')
+logger.info(f'MSE: {mse:.4f}')
+logger.info(f'MAE: {mae:.4f}')
+logger.info(f'ADE: {ade:.4f}')
+logger.info(f'FDE: {fde:.4f}')
 
 # save model
-model_dir = 'model'
-if not os.path.exists(model_dir):
-    os.makedirs(model_dir)
+# model_dir = 'model'
+# if not os.path.exists(model_dir):
+#     os.makedirs(model_dir)
 
-torch.save(model.state_dict(), os.path.join(model_dir, 'seq2seq_lstm.pth'))
+torch.save(model.state_dict(), os.path.join(output_path, f'{args.model}.pth'))
