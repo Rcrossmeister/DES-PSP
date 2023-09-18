@@ -31,7 +31,7 @@ def init_logger(log_path: str):
 
 parser = argparse.ArgumentParser(description='Stock Price Prediction')
 parser.add_argument('--model', type=str, default='seq2seq_lstm', help='model name')
-parser.add_argument('--output_path', type=str, default='result/', help='log path')
+parser.add_argument('--output_path', type=str, default='results/', help='log path')
 parser.add_argument('--df_path', type=str, default='df_path/', help='data frame path')
 # parser.add_argument('--df_path_trump', type=str, default='/home/hzj/NLP1/StockPricePrediction/2023-05-22/GroupB.csv', help='data frame path')
 # parser.add_argument('--df_path_biden', type=str, default='/home/hzj/NLP1/StockPricePrediction/2023-05-22/GroupA.csv', help='data frame path')
@@ -131,6 +131,20 @@ class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(LSTM, self).__init__()
         # self.lstm = nn.LSTM(input_size, hidden_size, dropout=0.2, num_layers=5)
+        self.lstm = nn.LSTM(input_size, hidden_size, dropout=0.2, num_layers=5, bidirectional=False)
+        # self.fc = nn.Linear(hidden_size, output_size)
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def forward(self, input_seq):
+        out, (hidden, cell) = self.lstm(input_seq)
+        output_seq = self.fc(out)
+
+        return output_seq
+    
+class BiLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(LSTM, self).__init__()
+        # self.lstm = nn.LSTM(input_size, hidden_size, dropout=0.2, num_layers=5)
         self.lstm = nn.LSTM(input_size, hidden_size, dropout=0.2, num_layers=5, bidirectional=True)
         # self.fc = nn.Linear(hidden_size, output_size)
         self.fc = nn.Linear(hidden_size * 2, output_size)
@@ -144,8 +158,19 @@ class LSTM(nn.Module):
 class GRU(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(GRU, self).__init__()
+        self.gru = nn.GRU(input_size, hidden_size, dropout=0.2, num_layers=5, bidirectional=False)
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def forward(self, input_seq):
+        out, _ = self.gru(input_seq)
+        output_seq = self.fc(out)
+        return output_seq
+    
+class BiGRU(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(GRU, self).__init__()
         self.gru = nn.GRU(input_size, hidden_size, dropout=0.2, num_layers=5, bidirectional=True)
-        self.fc = nn.Linear(hidden_size*2, output_size)
+        self.fc = nn.Linear(hidden_size, output_size)
 
     def forward(self, input_seq):
         out, _ = self.gru(input_seq)
@@ -163,8 +188,12 @@ elif args.model == 'seq2seq_gru':
     model = Seq2Seq_GRU(input_size, hidden_size, output_size).to(device)
 elif args.model == 'lstm':
     model = LSTM(input_size, hidden_size, output_size).to(device)
+elif args.model == 'bilstm':
+    model = BiLSTM(input_size, hidden_size, output_size).to(device)
 elif args.model == 'gru':
     model = GRU(input_size, hidden_size, output_size).to(device)
+elif args.model == 'bigru':
+    model = BiGRU(input_size, hidden_size, output_size).to(device)
 else:
     print("model name error")
     logger.error("model name error")
