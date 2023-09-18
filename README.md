@@ -6,6 +6,9 @@
 - 2023.09.14
   - modify with `argparse`
   - `results/`
+- 2023.09.18
+  - add logger to `main.py`
+  - finish the baseline experiments
 
 ## Results
 
