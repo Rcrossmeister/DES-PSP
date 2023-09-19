@@ -1,15 +1,29 @@
 # DES-PSP
- Double Encoder Seq2seq-Based Presidential ConceptStock Price Prediction model
+ Double Encoder Seq2seq-Based Presidential Conceptual Stock Price Prediction model
 
 **NOTIFICATION:**
 
-_Note : Model need interface_
+_Note : Model need interface._
 
 *Note: The README Still need a further revise and implements.* 
+
+*Note: Reproduce paper list is need to be determined.*
+
+*Note: The test parameter need to be appointed.*
 
 __Update:__
 
 * *A argparse interface is released. 09-015-2023*
+
+**TO-DO:**
+
+1. Ablation Study.
+2. Need to compare the proposed DES-PSP model with existing state-of-the-art methods in the field of stock market prediction.
+3. Need more comprehensive analysis of the model's sensitivity to different parameter settings.
+4. Potentially combine novelty methods (After well-done baseline).
+5. Verifying the hypothesis of the exists stock which benefits from the election of a specific presidential candidate.
+6. Find background news to support the election of conceptual stocks.
+7. State the generalizability.
 
 ## DataSet
 
