@@ -57,11 +57,16 @@ parser.add_argument('--use_gpu', type=bool, default=True, help='use gpu')
 parser.add_argument('--gpu', type=int, default=0, help='gpu')
 parser.add_argument('--use_multi_gpu', action='store_true', help='use multiple gpus', default=False)
 parser.add_argument('--devices', type=str, default='0,1,2,3',help='device ids of multile gpus')
-
+parser.add_argument('--seed', type=int, default=88, help='seed')
 args = parser.parse_args()
 
 args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False
 
+torch.manual_seed(args.seed)
+
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
 if args.use_gpu and args.use_multi_gpu:
     args.devices = args.devices.replace(' ','')
     device_ids = args.devices.split(',')
