@@ -3,6 +3,8 @@ import numpy as np
 from datetime import timedelta
 import logging
 import time
+import torch
+from sklearn.metrics import matthews_corrcoef
 
 def init_logger(log_path: str):
     logger  = logging.getLogger()
@@ -77,6 +79,20 @@ def remove_invalid_stocks(input_data, target_data, val_input_data, val_target_da
 
     return (input_data[valid_stocks], target_data[valid_stocks],
             val_input_data[valid_stocks], val_target_data[valid_stocks])
+
+def acc(output_seq, target_seq):
+    accuracy = (output_seq == target_seq).float().mean()
+    return accuracy
+
+def MCC(output_seq, target_seq):
+    output_seq_flat = torch.reshape(output_seq, (-1,))
+    output_seq_np = output_seq_flat.cpu().numpy()
+    target_seq_flat = torch.reshape(target_seq, (-1,))
+    target_seq_np = target_seq_flat.cpu().numpy()
+
+    mcc = matthews_corrcoef(target_seq_np, output_seq_np)
+
+    return mcc
 
 
 if __name__ == '__main__':

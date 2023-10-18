@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from utils_movement import init_logger, prepare_data, remove_invalid_stocks
+from utils_movement import init_logger, prepare_data, remove_invalid_stocks, acc, MCC
 import os
 
 import argparse
@@ -62,9 +62,15 @@ class experiment(object):
         elif self.args.model == 'lstm':
             from model_movement import LSTM
             model = LSTM(input_size=input_size, hidden_size=hidden_size, output_size=output_size)
+        elif self.args.model == 'bilstm':
+            from model_movement import BiLSTM
+            model = BiLSTM(input_size, hidden_size, output_size)
         elif self.args.model == 'gru':
             from model_movement import GRU
             model = GRU(input_size=input_size, hidden_size=hidden_size, output_size=output_size)
+        elif self.args.model == 'bigru':
+            from model_movement import BiGRU
+            model = BiGRU(input_size, hidden_size, output_size)
         else:
             raise ValueError('No such model!')
 
@@ -116,6 +122,7 @@ class experiment(object):
         batch_size = 512
 
         for epoch in range(num_epochs):
+            self.model.train()
             for i in range(0, len(train_input_seq) - batch_size, batch_size):
                 input_batch = train_input_seq[i:i + batch_size]
                 target_batch = train_target_seq[i:i + batch_size]
@@ -135,14 +142,24 @@ class experiment(object):
         logger.info('Start testing...')
 
         with torch.no_grad():
+            self.model.eval()
             val_output_seq = self.model(val_input_seq)
             val_loss = criterion(val_output_seq, val_target_seq)
             logger.info('Test Loss: {}'.format(val_loss.item()))
+            threshold = 0.5
+            val_output_seq = (val_output_seq > threshold).float()
+            accuracy = acc(val_output_seq, val_target_seq)
+            mcc = MCC(val_output_seq, val_target_seq)
+            logger.info(f'acc:{accuracy}, MCC:{mcc}')
         
         logger.info('Finish testing!')
         logger.info('Saving model...')
-        torch.save(self.model.state_dict(), os.path.join(self.args.output_path, f'{self.args.model}.pth'))
+        torch.save(self.model.state_dict(), os.path.join(self.output_path, f'{self.args.model}.pth'))
 
+    def test_only(self, model_path):
+        self.model.load_state_dict(model_path)
+        train_input_data, train_target_data, val_input_data, val_target_data = self._get_data()
 if __name__ == '__main__':
     exp = experiment(args)
+    
     exp.train()
