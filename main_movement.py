@@ -150,16 +150,32 @@ class experiment(object):
             val_output_seq = (val_output_seq > threshold).float()
             accuracy = acc(val_output_seq, val_target_seq)
             mcc = MCC(val_output_seq, val_target_seq)
-            logger.info(f'acc:{accuracy}, MCC:{mcc}')
+            logger.info(f'acc:{accuracy:.20f}, MCC:{mcc:.20f}')
         
         logger.info('Finish testing!')
         logger.info('Saving model...')
         torch.save(self.model.state_dict(), os.path.join(self.output_path, f'{self.args.model}.pth'))
 
     def test_only(self, model_path):
-        self.model.load_state_dict(model_path)
+        logger = init_logger(self.output_path)
+        logger.info(f'{self.args.model}, test_only, model_path:{model_path}')
+        self.model.load_state_dict(torch.load(model_path))
         train_input_data, train_target_data, val_input_data, val_target_data = self._get_data()
+        criterion = nn.BCELoss()
+        with torch.no_grad():
+            self.model.eval()
+            val_input_seq = torch.from_numpy(val_input_data).float().to(self.device)
+            val_target_seq = torch.from_numpy(val_target_data).float().to(self.device)
+            val_output_seq = self.model(val_input_seq)
+            val_loss = criterion(val_output_seq, val_target_seq)
+            logger.info('Test Loss: {}'.format(val_loss.item()))
+            threshold = 0.5
+            val_output_seq = (val_output_seq > threshold).float()
+            accuracy = acc(val_output_seq, val_target_seq)
+            mcc = MCC(val_output_seq, val_target_seq)
+            logger.info(f'acc:{accuracy:.20f}, MCC:{mcc:.20f}')
 if __name__ == '__main__':
     exp = experiment(args)
     
     exp.train()
+    # exp.test_only('/home/hjd/work/DES-PSP/results_mm/seq2seq_gru_2023-10-18_19-22/seq2seq_gru.pth')
