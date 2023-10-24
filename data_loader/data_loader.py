@@ -39,6 +39,8 @@ class Dataset_Stock(Dataset):
             self.target_data = self.target_scaler.transform(self.target_data)
         self.input_data = self.input_data.reshape(self.input_data.shape[0], self.input_data.shape[1], 1)
         self.target_data = self.target_data.reshape(self.target_data.shape[0], self.target_data.shape[1], 1)
+        self.input_data = self.input_data.astype(np.float32)
+        self.target_data = self.target_data.astype(np.float32)
     
     def __len__(self):
         return self.input_data.shape[0]
