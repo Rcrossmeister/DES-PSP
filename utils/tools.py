@@ -1,7 +1,28 @@
 import pandas as pd
 import numpy as np
 from datetime import timedelta
+import logging
+import time
 
+def init_logger(log_path: str):
+    logger  = logging.getLogger()
+    # 设置日志级别和格式
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    # 获取当前日期和时间作为日志文件名的一部分
+    current_datetime = time.strftime("%Y-%m-%d_%H-%M")
+    log_file = f"{log_path}/{current_datetime}.log"
+
+    # 创建一个文件处理器，用于将日志输出到文件
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+    # 将文件处理器添加到日志记录器中
+    logger = logging.getLogger('')
+    logger.addHandler(file_handler)
+
+    return logger
 def get_time_block_series(series_array, date_to_index, start_date, end_date):
     inds = date_to_index[start_date:end_date]
     return series_array[:, inds]
@@ -39,8 +60,8 @@ def prepare_data(df_path, data_start_date, data_end_date, pred_steps):
 
     return input_data, target_data
 
-def remove_invalid_stocks(input_data, target_data, val_input_data, val_target_data):
-    data_sets = [input_data, target_data, val_input_data, val_target_data]
+def remove_invalid_stocks(input_data, target_data):
+    data_sets = [input_data, target_data]
     valid_stocks = set(range(input_data.shape[0]))  # 初始化为所有股票的索引集合
 
     for dataset in data_sets:
@@ -49,8 +70,7 @@ def remove_invalid_stocks(input_data, target_data, val_input_data, val_target_da
 
     valid_stocks = list(valid_stocks)
 
-    return (input_data[valid_stocks], target_data[valid_stocks],
-            val_input_data[valid_stocks], val_target_data[valid_stocks])
+    return (input_data[valid_stocks], target_data[valid_stocks])
 
 
 if __name__ == '__main__':
