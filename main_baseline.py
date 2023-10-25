@@ -32,7 +32,7 @@ parser.add_argument('--target', type=str, default='price', help='target name')
 parser.add_argument('--model', type=str, default='lstm', help='model name')
 parser.add_argument('--input_size', type=int, default=1, help='input size')
 parser.add_argument('--hidden_size', type=int, default=64, help='hidden size')
-parser.add_argument('--output_size', type=int, default=14, help='output size')
+parser.add_argument('--output_size', type=int, default=1, help='output size')
 parser.add_argument('--num_layers', type=int, default=5, help='number of layers')
 parser.add_argument('--dropout', type=float, default=0.2, help='dropout rate')
 
