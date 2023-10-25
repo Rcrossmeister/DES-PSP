@@ -1,6 +1,7 @@
 from data_loader.data_loader import Dataset_Stock
 from exp.exp_basic import Exp_Basic
 from utils.plotter import plot_loss
+from utils.metrics import compute_metrics
 
 import torch
 import torch.nn as nn
@@ -14,6 +15,7 @@ import time
 import pprint
 
 from utils.tools import init_logger
+
 
 class Exp_Baseline(Exp_Basic):
     def __init__(self, args):
@@ -45,6 +47,7 @@ class Exp_Baseline(Exp_Basic):
             self.args.input_size,
             self.args.hidden_size, 
             self.args.output_size,
+            self.args.pred_steps,
             self.args.num_layers,
             self.args.dropout)
         
@@ -138,16 +141,28 @@ class Exp_Baseline(Exp_Basic):
 
             current_train_loss = np.mean(train_loss)
             self.logger.info(f"Epoch: {epoch}, Train Loss: {current_train_loss:.10f}")
-            current_val_loss = self.val(val_data_set, val_data_loader, criterion)
-            self.logger.info(f"Epoch: {epoch}, Val Loss: {current_val_loss:.10f}")
+            val_loss, val_targets, val_outputs  = self.val(val_data_set, val_data_loader, criterion)
+            self.logger.info(f"Epoch: {epoch}, Val Loss: {val_loss:.10f}")
 
             all_train_loss.append(current_train_loss)
-            all_val_loss.append(current_val_loss)
+            all_val_loss.append(val_loss)
 
         self.logger.info(f"Training finished, total training time: {time.time() - time_now:.4f}s")
 
         plot_loss('train_loss', all_train_loss, self.output_path)
         plot_loss('val_loss', all_val_loss, self.output_path)
+
+        self.logger.info('Calculating Metrics...')
+        all_val_targets = torch.cat(val_targets, dim=0)
+        all_val_outputs = torch.cat(val_outputs, dim=0)
+        RMSE, MAE, ADE, FDE = compute_metrics(all_val_targets, all_val_outputs)
+        self.logger.info(f'''
+                        Metrics on Val set:
+                         RMSE:{RMSE},
+                         MAE:{MAE},
+                         ADE:{ADE},
+                         FDE:{FDE}
+        ''')
 
         self.logger.info('Start saving model...')
         torch.save(self.model.state_dict(), os.path.join(self.output_path, f'{self.args.model}.pth'))
@@ -155,10 +170,14 @@ class Exp_Baseline(Exp_Basic):
     def val(self, val_data, val_loader, criterion):
         self.model.eval()
         val_loss = []
+        all_target = []
+        all_output = []
         for i, (input_seq, target_seq) in enumerate(val_loader):
             input_seq = input_seq.to(self.device)
             target_seq = target_seq.to(self.device)
             output_seq = self.model(input_seq)
+            all_target.append(target_seq)
+            all_output.append(output_seq)
             loss = criterion(output_seq, target_seq)
             val_loss.append(loss.item())
-        return np.mean(val_loss)
+        return np.mean(val_loss), all_target, all_output
