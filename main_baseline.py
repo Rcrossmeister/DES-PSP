@@ -16,7 +16,7 @@ parser.add_argument('--all_data_path', type=str, default='All_Data.csv', help='d
 parser.add_argument('--trump_data_path', type=str, default='GroupB.csv', help='data file name')
 parser.add_argument('--biden_data_path', type=str, default='GroupA.csv', help='data file name')
 parser.add_argument('--result_path', type=str, default='results_88', help='result path')
-parser.add_argument('--remove_invaild', type=bool, default=False, help='remove invalid stocks')
+parser.add_argument('--remove_invalid', type=bool, default=False, help='remove invalid stocks')
 parser.add_argument('--scale', type=bool, default=True, help='scale data')
 parser.add_argument('--inverse', type=bool, default=False, help='inverse data')
 

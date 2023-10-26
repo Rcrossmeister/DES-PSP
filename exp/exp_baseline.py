@@ -1,7 +1,9 @@
-from data_loader.data_loader import Dataset_Stock
+from data_loader.data_loader import Dataset_Stock_Price
 from exp.exp_basic import Exp_Basic
 from utils.plotter import plot_loss
 from utils.metrics import compute_metrics
+from utils.tools import init_logger
+from models.baseline_model import Seq2Seq_LSTM, Seq2Seq_BiLSTM, Seq2Seq_GRU, Seq2Seq_BiGRU, LSTM, BiLSTM, GRU, BiGRU
 
 import torch
 import torch.nn as nn
@@ -14,7 +16,7 @@ import os
 import time
 import pprint
 
-from utils.tools import init_logger
+
 
 
 class Exp_Baseline(Exp_Basic):
@@ -29,10 +31,6 @@ class Exp_Baseline(Exp_Basic):
         self.logger = init_logger(self.output_path)
 
     def _build_model(self):
-        if self.args.target == 'price':
-            from models.price import Seq2Seq_LSTM, Seq2Seq_BiLSTM, Seq2Seq_GRU, Seq2Seq_BiGRU, LSTM, BiLSTM, GRU, BiGRU
-        else:
-            from models.movement import Seq2Seq_LSTM, Seq2Seq_BiLSTM, Seq2Seq_GRU, Seq2Seq_BiGRU, LSTM, BiLSTM, GRU, BiGRU
         model_dict = {
             'seq2seq_lstm': Seq2Seq_LSTM,
             'seq2seq_bilstm': Seq2Seq_BiLSTM,
@@ -75,13 +73,13 @@ class Exp_Baseline(Exp_Basic):
             data_path = self.args.biden_data_path
             start_date = self.args.val_start_date
             end_date = self.args.val_end_date
-        data_set = Dataset_Stock(
+        data_set = Dataset_Stock_Price(
             root_path=self.args.root_path,
             data_path=data_path,
             start_date=start_date,
             end_date=end_date,
             pred_len=self.args.pred_steps,
-            remove_invaild=self.args.remove_invaild,
+            remove_invalid=self.args.remove_invalid,
             flag=flag,
             scale=self.args.scale,
             inverse=self.args.inverse)
@@ -102,7 +100,7 @@ class Exp_Baseline(Exp_Basic):
         if self.args.target == 'price':
             criterion = nn.MSELoss()
         else:
-            criterion = nn.BCELoss()
+            criterion = nn.BCEWithLogitsLoss()
         return criterion
     
     def train(self):
