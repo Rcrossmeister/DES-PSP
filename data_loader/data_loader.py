@@ -8,10 +8,10 @@ from torch.utils.data import Dataset, DataLoader
 from utils.tools import init_logger, prepare_data, remove_invalid_stocks
 from utils.scaler import StandardScaler
 
-class Dataset_Stock(Dataset):
+class Dataset_Stock_Price(Dataset):
     def __init__(self, root_path='df_path', data_path='All_Data.csv', 
                  start_date='2015/11/09', end_date='2016/11/08', pred_len=14,
-                 remove_invaild=False, flag='train', scale=True, inverse=False):
+                 remove_invalid=False, flag='train', scale=True, inverse=False):
         assert flag in ['train', 'test', 'val']
         type_map = {'train':0, 'val':1, 'test':2}
         self.set_type = type_map[flag]
@@ -20,7 +20,7 @@ class Dataset_Stock(Dataset):
         self.pred_len = pred_len
         self.scale = scale
         self.inverse = inverse
-        self.remove_invaild = remove_invaild
+        self.remove_invalid = remove_invalid
         self.root_path = root_path
         self.data_path = data_path
         self.input_scaler = StandardScaler()
@@ -30,7 +30,7 @@ class Dataset_Stock(Dataset):
     def __read_data__(self):
         df_path = os.path.join(self.root_path, self.data_path)
         self.input_data, self.target_data = prepare_data(df_path, self.start_date, self.end_date, self.pred_len)
-        if self.remove_invaild:
+        if self.remove_invalid:
             self.input_data, self.target_data = remove_invalid_stocks(self.input_data, self.target_data)
         if self.scale:
             self.input_scaler.fit(self.input_data)
@@ -51,7 +51,7 @@ class Dataset_Stock(Dataset):
         return input_seq, target_seq
     
 if __name__ == '__main__':
-    dataset_stock = Dataset_Stock()
+    dataset_stock = Dataset_Stock_Price()
     data_loader = DataLoader(
             dataset_stock,
             batch_size=32,
@@ -61,3 +61,11 @@ if __name__ == '__main__':
     for i, (input_seq, target_seq) in enumerate(data_loader):
         print(input_seq.shape)
         print(target_seq.shape)
+
+
+class Dataset_Stock_Movement(Dataset):
+
+    def __init__(self, root_path='df_path', data_path='All_Data.csv',
+                 start_date='2015/11/09', end_date='2016/11/08', pred_len=14,
+                 remove_invalid=False, flag='train', scale=True, inverse=False):
+        pass
