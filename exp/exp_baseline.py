@@ -1,7 +1,7 @@
-from data_loader.data_loader import Dataset_Stock_Price
+from data_loader.data_loader import Dataset_Stock
 from exp.exp_basic import Exp_Basic
 from utils.plotter import plot_loss
-from utils.metrics import compute_metrics
+from utils.metrics import compute_metrics, acc, MCC
 from utils.tools import init_logger
 from models.baseline_model import Seq2Seq_LSTM, Seq2Seq_BiLSTM, Seq2Seq_GRU, Seq2Seq_BiGRU, LSTM, BiLSTM, GRU, BiGRU
 
@@ -73,9 +73,10 @@ class Exp_Baseline(Exp_Basic):
             data_path = self.args.biden_data_path
             start_date = self.args.val_start_date
             end_date = self.args.val_end_date
-        data_set = Dataset_Stock_Price(
+        data_set = Dataset_Stock(
             root_path=self.args.root_path,
             data_path=data_path,
+            target=self.args.target,
             start_date=start_date,
             end_date=end_date,
             pred_len=self.args.pred_steps,
@@ -153,15 +154,26 @@ class Exp_Baseline(Exp_Basic):
         self.logger.info('Calculating Metrics...')
         all_val_targets = torch.cat(val_targets, dim=0)
         all_val_outputs = torch.cat(val_outputs, dim=0)
-        RMSE, MAE, ADE, FDE = compute_metrics(all_val_targets, all_val_outputs)
-        self.logger.info(f'''
-                        Metrics on Val set:
-                         RMSE:{RMSE},
-                         MAE:{MAE},
-                         ADE:{ADE},
-                         FDE:{FDE}
-        ''')
-
+        if self.args.target == 'price':
+            RMSE, MAE, ADE, FDE = compute_metrics(all_val_targets, all_val_outputs)
+            self.logger.info(f'''
+                            Metrics on Val set:
+                             RMSE:{RMSE},
+                             MAE:{MAE},
+                             ADE:{ADE},
+                             FDE:{FDE}
+            ''')
+        else:
+            threshold = 0.5
+            all_val_outputs = torch.sigmoid(all_val_outputs)
+            all_val_outputs = (all_val_outputs > threshold).float()
+            accuracy = acc(all_val_targets, all_val_outputs)
+            mcc = MCC(all_val_targets, all_val_outputs)
+            self.logger.info(f'''
+                            Metrics on Val set:
+                                Accuracy:{accuracy},
+                                MCC:{mcc}
+            ''')
         self.logger.info('Start saving model...')
         torch.save(self.model.state_dict(), os.path.join(self.output_path, f'{self.args.model}.pth'))
 

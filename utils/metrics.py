@@ -16,15 +16,15 @@ def compute_metrics(target_values, output_values):   # input tensor
     return rmse.item(), mae.item(), ade.item(), fde.item()
 
 
-def acc(output_seq, target_seq):    # input ndarray
+def acc(output_seq, target_seq):
     accuracy = (output_seq == target_seq).float().mean()
     return accuracy
 
-def MCC(output_seq, target_seq):    # input ndarray
+def MCC(output_seq, target_seq):
     output_seq_flat = torch.reshape(output_seq, (-1,))
-    output_seq_np = output_seq_flat.cpu().numpy()
+    output_seq_np = output_seq_flat.cpu().detach().numpy()
     target_seq_flat = torch.reshape(target_seq, (-1,))
-    target_seq_np = target_seq_flat.cpu().numpy()
+    target_seq_np = target_seq_flat.cpu().detach().numpy()
 
     mcc = matthews_corrcoef(target_seq_np, output_seq_np)
 

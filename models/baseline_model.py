@@ -39,7 +39,7 @@ class Seq2Seq_LSTM(nn.Module):
 
     def forward(self, x):
         encoder_hidden, encoder_cell = self.encoder(x)
-        decoder_input = x[:, -1, :].unsqueeze(1)
+        decoder_input = x[:, -1, :].unsqueeze(1) # [batch, 1, 1]
 
         outputs = []
         for _ in range(self.pred_len):
