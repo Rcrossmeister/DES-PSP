@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import os
 
-def plot_loss(label, loss, save_path):
+def plot_loss(label: str, loss: list, save_path: str):
     path = os.path.join(save_path, f'{label}.png')
     plt.figure()
     plt.xlabel('Epoch')
@@ -9,6 +9,10 @@ def plot_loss(label, loss, save_path):
     plt.legend()
     plt.savefig(path)
     plt.close()
+
+
+def plot_pred(input_seq, target_seq, save_path: str):
+    pass
 
 
 if __name__ == '__main__':

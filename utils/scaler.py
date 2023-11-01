@@ -2,7 +2,7 @@ import numpy as np
 
 
 class StandardScaler():
-    def __init__(self, remove_invaild=False):
+    def __init__(self, remove_invalid=False):
         self.mean = 0.
         self.std = 1.
     
