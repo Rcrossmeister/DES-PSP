@@ -24,7 +24,7 @@ class Exp_Baseline(Exp_Basic):
         super(Exp_Baseline, self).__init__(args)
 
         current_datetime = time.strftime("%Y-%m-%d_%H-%M")
-        self.output_path = os.path.join(self.args.result_path, f'{self.args.model}_{current_datetime}')
+        self.output_path = os.path.join(self.args.results_path, f'{self.args.model}_{current_datetime}')
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
         
@@ -105,6 +105,7 @@ class Exp_Baseline(Exp_Basic):
         return criterion
     
     def train(self):
+        global val_targets, val_outputs
         arg_dict = vars(self.args)
         pp = pprint.PrettyPrinter(indent=4)
         self.logger.info(pp.pformat(arg_dict))
