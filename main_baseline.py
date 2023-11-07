@@ -50,6 +50,13 @@ parser.add_argument('--epochs', type=int, default=100, help='number of epochs')
 parser.add_argument('--batch_size', type=int, default=512, help='batch size')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
 
+# test config
+parser.add_argument('--test_only', action='store_true', help='test only', default=False)
+parser.add_argument('--checkpoint_path', type=str, default=None, help='checkpoint path')
+parser.add_argument('--test_results_path', type=str, default=None, help='test results path')
+parser.add_argument('--test_start_date', type=str, default='2019/12/15', help='test start date')
+parser.add_argument('--test_end_date', type=str, default='2020/12/14', help='test end date')
+
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -58,7 +65,10 @@ torch.backends.cudnn.deterministic = True
 
 def main():
     exp = Exp_Baseline(args)
-    exp.train()
+    if args.test_only:
+        exp.test_only()
+    else:
+        exp.train()
 
 
 if __name__ == '__main__':

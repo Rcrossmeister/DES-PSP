@@ -3,6 +3,7 @@ from exp.exp_basic import Exp_Basic
 from models.model import DES_PSP_Model
 from utils.plotter import plot_loss
 from utils.metrics import compute_metrics, acc, MCC
+from utils.metrics_new import regression_metrics, classification_metrics
 from utils.tools import init_logger
 
 import torch
@@ -25,7 +26,7 @@ class Exp_DES_PSP(Exp_Basic):
         if self.args.test_only:
             self.output_path = self.args.test_results_path
         else:
-            self.output_path = os.path.join(self.args.results_path, f'{self.args.model}_{current_datetime}')
+            self.output_path = os.path.join(self.args.results_path, f'{self.args.target}_{self.args.model}_{current_datetime}')
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
         if not os.path.exists(os.path.join(self.output_path, 'ckp')):
@@ -197,23 +198,24 @@ class Exp_DES_PSP(Exp_Basic):
         all_val_targets = torch.cat(val_targets, dim=0)
         all_val_outputs = torch.cat(val_outputs, dim=0)
         if self.args.target == 'price':
-            RMSE, MAE, ADE, FDE = compute_metrics(all_val_targets, all_val_outputs)
+            mse, rmse, mae, ade, fde = regression_metrics(all_val_targets, all_val_outputs)
             self.logger.info(f'''
                                     Metrics on Val set:
-                                     RMSE:{RMSE},
-                                     MAE:{MAE},
-                                     ADE:{ADE},
-                                     FDE:{FDE}
+                                    MSE:{mse},
+                                    RMSE:{rmse},
+                                    MAE:{mae},
+                                    ADE:{ade},
+                                    FDE:{fde}
                     ''')
         else:
             threshold = 0.5
             all_val_outputs = torch.sigmoid(all_val_outputs)
             all_val_outputs = (all_val_outputs > threshold).float()
-            accuracy = acc(all_val_targets, all_val_outputs)
-            mcc = MCC(all_val_targets, all_val_outputs)
+            accuracy, f1, mcc = classification_metrics(all_val_targets, all_val_outputs)
             self.logger.info(f'''
                                     Metrics on Val set:
                                         Accuracy:{accuracy},
+                                        F1:{f1},
                                         MCC:{mcc}
                     ''')
         self.logger.info('Start saving model...')
@@ -259,40 +261,43 @@ class Exp_DES_PSP(Exp_Basic):
             all_test_loss.append(test_loss)
             self.logger.info(f"{checkpoint}: Test Loss: {test_loss:.10f}")
 
-            all_test_targets = torch.cat(test_targets, dim=0).detach().cpu()
-            all_test_outputs = torch.cat(test_outputs, dim=0).detach().cpu()
+            all_test_targets = torch.cat(test_targets, dim=0)
+            all_test_outputs = torch.cat(test_outputs, dim=0)
 
             if self.args.target == 'price':
-                RMSE, MAE, ADE, FDE = compute_metrics(all_test_targets, all_test_outputs)
-                all_test_metrics.append([RMSE, MAE, ADE, FDE])
-                self.logger.info(f'{checkpoint}: RMSE:{RMSE}, MAE:{MAE}, ADE:{ADE}, FDE:{FDE}')
+                mse, rmse, mae, ade, fde = regression_metrics(all_test_targets, all_test_outputs)
+                all_test_metrics.append([mse, rmse, mae, ade, fde])
+                self.logger.info(f'{checkpoint}: MSE:{mse}, RMSE:{rmse}, MAE:{mae}, ADE:{ade}, FDE:{fde}')
             else:
                 threshold = 0.5
                 test_outputs = torch.sigmoid(test_outputs)
                 test_outputs = (test_outputs > threshold).float()
-                accuracy = acc(test_targets, test_outputs)
-                mcc = MCC(test_targets, test_outputs)
-                all_test_metrics.append([accuracy, mcc])
-                self.logger.info(f'{checkpoint}: Accuracy:{accuracy}, MCC:{mcc}')
+                accuracy, f1, mcc = classification_metrics(all_test_targets, all_test_outputs)
+                all_test_metrics.append([accuracy, f1, mcc])
+                self.logger.info(f'{checkpoint}: Accuracy:{accuracy}, F1:{f1}, MCC:{mcc}')
             del checkpoint
             torch.cuda.empty_cache()
             gc.collect()
 
         plot_loss('test_loss', all_test_loss, self.args.test_results_path)
         if self.args.target == 'price':
-            RMSEs = [result[0] for result in all_test_metrics]
-            MAEs = [result[1] for result in all_test_metrics]
-            ADEs = [result[2] for result in all_test_metrics]
-            FDEs = [result[3] for result in all_test_metrics]
+            mses = [result[0] for result in all_test_metrics]
+            rmses = [result[1] for result in all_test_metrics]
+            maes = [result[2] for result in all_test_metrics]
+            ades = [result[3] for result in all_test_metrics]
+            fdes = [result[4] for result in all_test_metrics]
 
-            plot_loss('RMSE', RMSEs, self.args.test_results_path)
-            plot_loss('MAE', MAEs, self.args.test_results_path)
-            plot_loss('ADE', ADEs, self.args.test_results_path)
-            plot_loss('FDE', FDEs, self.args.test_results_path)
+            plot_loss('MSE', mses, self.args.test_results_path)
+            plot_loss('RMSE', rmses, self.args.test_results_path)
+            plot_loss('MAE', maes, self.args.test_results_path)
+            plot_loss('ADE', ades, self.args.test_results_path)
+            plot_loss('FDE', fdes, self.args.test_results_path)
         else:
             accuracys = [result[0] for result in all_test_metrics]
-            mccs = [result[1] for result in all_test_metrics]
+            f1s = [result[1] for result in all_test_metrics]
+            mccs = [result[2] for result in all_test_metrics]
             plot_loss('Accuracy', accuracys, self.args.test_results_path)
+            plot_loss('F1', f1s, self.args.test_results_path)
             plot_loss('MCC', mccs, self.args.test_results_path)
 
 
