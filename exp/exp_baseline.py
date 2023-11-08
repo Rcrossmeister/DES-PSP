@@ -2,7 +2,7 @@ from data_loader.data_loader import Dataset_Stock
 from exp.exp_basic import Exp_Basic
 from utils.plotter import plot_loss
 from utils.metrics import compute_metrics, acc, MCC
-from utils.metrics_new import classification_metrics, regression_metrics
+from utils.metrics_new import classification_metrics, regression_metrics, calculate_label_num
 from utils.tools import init_logger
 from models.baseline_model import Seq2Seq_LSTM, Seq2Seq_BiLSTM, Seq2Seq_GRU, Seq2Seq_BiGRU, LSTM, BiLSTM, GRU, BiGRU
 
@@ -225,6 +225,7 @@ class Exp_Baseline(Exp_Basic):
         all_test_outputs = torch.cat(all_test_outputs, dim=0)
 
         if self.args.target == 'price':
+            
             mse_score, rmse_score, mae_score, ade, fde = regression_metrics(all_test_outputs, all_test_targets)
             self.logger.info(f'''
                             Metrics on Test set:
@@ -253,8 +254,14 @@ class Exp_Baseline(Exp_Basic):
             threshold = 0.5
             all_test_outputs = torch.sigmoid(all_test_outputs)
             all_test_outputs = (all_test_outputs > threshold).float()
+
+            target_0s, target_1s = calculate_label_num(all_test_targets)
+            output_0s, output_1s = calculate_label_num(all_test_outputs)
+            
             acc, f1, mcc = classification_metrics(all_test_outputs, all_test_targets)
             self.logger.info(f'''
+                            Target 0s: {target_0s}, Target 1s: {target_1s}
+                            Output 0s: {output_0s}, Output 1s: {output_1s}
                             Metrics on Test set:
                                 Accuracy:{acc},
                                 F1:{f1},
