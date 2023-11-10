@@ -9,6 +9,10 @@ data/.DS_Store
 data/raw/.DS_Store
 Review.md
 
+/.idea
+/.fleet
 /df_path
-
-test.ipynb
+/results*
+/test
+/waste
+*.ipynb

@@ -32,7 +32,7 @@ def transform_series(series_array):
     series_array = series_array.reshape((series_array.shape[0], series_array.shape[1]))
     return series_array
 
-def prepare_data(df_path, data_start_date, data_end_date, pred_steps):
+def prepare_data(df_path, data_start_date, data_end_date, pred_steps, target='price'):
     df = pd.read_csv(df_path)
 
     print('Data ranges from %s to %s' % (data_start_date, data_end_date))
@@ -57,6 +57,12 @@ def prepare_data(df_path, data_start_date, data_end_date, pred_steps):
 
     target_data = get_time_block_series(series_array, date_to_index, train_pred_start, train_pred_end)
     target_data = transform_series(target_data)
+
+    if target == 'movement':
+        for i in range(target_data.shape[0]):
+            first_day_value = target_data[i, 0]
+            target_data[i, :] = (target_data[i, :] >= np.roll(target_data[i, :], shift=1)).astype(int)
+            target_data[i, 0] = (first_day_value >= input_data[i][-1]).astype(int)
 
     return input_data, target_data
 
