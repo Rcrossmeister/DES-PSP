@@ -21,7 +21,7 @@ import json
 
 
 
-class Exp_Baseline(Exp_Basic):
+class Exp_Baseline(Exp_Basic):  # 继承Exp_Basic基类
     def __init__(self, args):
         super(Exp_Baseline, self).__init__(args)
 

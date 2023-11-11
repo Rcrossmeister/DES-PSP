@@ -15,23 +15,26 @@ import numpy as np
 
 import os
 import time
-import pprint
-import gc
+import pprint  # 打印漂亮的结果
+import gc  # 手动释放内存
 
 class Exp_DES_PSP(Exp_Basic):
     def __init__(self, args):
+        # 初始化时，继承Exp_Basic
         super(Exp_DES_PSP, self).__init__(args)
-
+        # 记录当前时间
         current_datetime = time.strftime("%Y-%m-%d_%H-%M")
         if self.args.test_only:
             self.output_path = self.args.test_results_path
         else:
             self.output_path = os.path.join(self.args.results_path, f'{self.args.target}_{self.args.model}_{current_datetime}')
         if not os.path.exists(self.output_path):
+            # 如果output_path指定的路径不存在，则创建他
             os.makedirs(self.output_path)
         if not os.path.exists(os.path.join(self.output_path, 'ckp')):
+            # 如果output_path下面的子路径ckp不存在，则创建他
             os.makedirs(os.path.join(self.output_path, 'ckp'))
-
+        # 在output_path中初始化logger
         self.logger = init_logger(self.output_path)
 
     def _build_model(self):
