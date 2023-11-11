@@ -3,7 +3,7 @@ from exp.exp_basic import Exp_Basic
 from models.model import DES_PSP_Model
 from utils.plotter import plot_loss
 from utils.metrics import compute_metrics, acc, MCC
-from utils.metrics_new import regression_metrics, classification_metrics
+from utils.metrics_new import regression_metrics, classification_metrics, calculate_label_num
 from utils.tools import init_logger
 
 import torch
@@ -15,23 +15,26 @@ import numpy as np
 
 import os
 import time
-import pprint
-import gc
+import pprint  # 打印漂亮的结果
+import gc  # 手动释放内存
 
 class Exp_DES_PSP(Exp_Basic):
     def __init__(self, args):
+        # 初始化时，继承Exp_Basic
         super(Exp_DES_PSP, self).__init__(args)
-
+        # 记录当前时间
         current_datetime = time.strftime("%Y-%m-%d_%H-%M")
         if self.args.test_only:
             self.output_path = self.args.test_results_path
         else:
             self.output_path = os.path.join(self.args.results_path, f'{self.args.target}_{self.args.model}_{current_datetime}')
         if not os.path.exists(self.output_path):
+            # 如果output_path指定的路径不存在，则创建他
             os.makedirs(self.output_path)
         if not os.path.exists(os.path.join(self.output_path, 'ckp')):
+            # 如果output_path下面的子路径ckp不存在，则创建他
             os.makedirs(os.path.join(self.output_path, 'ckp'))
-
+        # 在output_path中初始化logger
         self.logger = init_logger(self.output_path)
 
     def _build_model(self):
@@ -211,8 +214,14 @@ class Exp_DES_PSP(Exp_Basic):
             threshold = 0.5
             all_val_outputs = torch.sigmoid(all_val_outputs)
             all_val_outputs = (all_val_outputs > threshold).float()
+
+            target_0s, target_1s = calculate_label_num(all_val_targets)
+            output_0s, output_1s = calculate_label_num(all_val_outputs)
+
             accuracy, f1, mcc = classification_metrics(all_val_targets, all_val_outputs)
             self.logger.info(f'''
+                                    Target 0s: {target_0s}, Target 1s: {target_1s}
+                                    Output 0s: {output_0s}, Output 1s: {output_1s}
                                     Metrics on Val set:
                                         Accuracy:{accuracy},
                                         F1:{f1},
@@ -270,11 +279,18 @@ class Exp_DES_PSP(Exp_Basic):
                 self.logger.info(f'{checkpoint}: MSE:{mse}, RMSE:{rmse}, MAE:{mae}, ADE:{ade}, FDE:{fde}')
             else:
                 threshold = 0.5
-                test_outputs = torch.sigmoid(test_outputs)
-                test_outputs = (test_outputs > threshold).float()
+                all_test_outputs = torch.sigmoid(all_test_outputs)
+                all_test_outputs = (all_test_outputs > threshold).float()
+
+                target_0s, target_1s = calculate_label_num(all_test_targets)
+                output_0s, output_1s = calculate_label_num(all_test_outputs)
+
                 accuracy, f1, mcc = classification_metrics(all_test_targets, all_test_outputs)
                 all_test_metrics.append([accuracy, f1, mcc])
-                self.logger.info(f'{checkpoint}: Accuracy:{accuracy}, F1:{f1}, MCC:{mcc}')
+                self.logger.info(f'{checkpoint}:'
+                                 f'target_0s:{target_0s}, target_1s:{target_1s}, '
+                                 f'output_0s:{output_0s}, output_1s:{output_1s},'
+                                 f'Accuracy:{accuracy}, F1:{f1}, MCC:{mcc}')
             del checkpoint
             torch.cuda.empty_cache()
             gc.collect()

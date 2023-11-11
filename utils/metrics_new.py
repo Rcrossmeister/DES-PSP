@@ -1,6 +1,7 @@
 import torch
 from torchmetrics.classification import BinaryAccuracy, BinaryF1Score, BinaryMatthewsCorrCoef
 from torchmetrics.regression import MeanSquaredError, MeanAbsoluteError
+import numpy as np
 
 # 分类指标计算函数
 def classification_metrics(y_pred, y_true):
@@ -63,3 +64,9 @@ def calculate_fde(y_pred, y_true):
     """
     fde = torch.norm(y_pred[:, -1, :] - y_true[:, -1, :], p=2, dim=-1).mean()
     return fde
+
+def calculate_label_num(input_tensor):
+    array = input_tensor.numpy()
+    zeros_count = np.count_nonzero(array == 0)
+    ones_count = np.count_nonzero(array == 1)
+    return zeros_count, ones_count

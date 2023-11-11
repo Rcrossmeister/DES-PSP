@@ -4,7 +4,6 @@ import pandas as pd
 
 import torch
 from torch.utils.data import Dataset, DataLoader
-
 from utils.tools import init_logger, prepare_data, remove_invalid_stocks
 from utils.scaler import StandardScaler
 
@@ -50,7 +49,7 @@ class Dataset_Stock(Dataset):
     def __getitem__(self, index):
         input_seq = self.input_data[index, :, :]   # [index, pred_len, feature=1]
         target_seq = self.target_data[index, :, :]
-        return input_seq, target_seq
+        return input_seq, target_seq # [batch_size, pred_len, feature=1]
 
 
 class DataSet_Competitor(Dataset):
@@ -95,13 +94,20 @@ class DataSet_Competitor(Dataset):
 
 
 if __name__ == '__main__':
-    dataset_stock = Dataset_Stock()
-    data_loader = DataLoader(
-            dataset_stock,
-            batch_size=32,
-            shuffle=True,
-            num_workers=0,
-            drop_last=True)
-    for i, (input_seq, target_seq) in enumerate(data_loader):
-        print(input_seq.shape)
-        print(target_seq.shape)
+    # dataset_stock = Dataset_Stock(target='movement', flag='test', data_path='GroupA.csv', start_date='2019/12/15', end_date='2020/12/14')
+    dataset_stock = Dataset_Stock(target='movement', data_path='GroupB.csv')
+    target_data = dataset_stock.target_data
+    zeros_count = np.count_nonzero(target_data == 0)
+    ones_count = np.count_nonzero(target_data == 1)
+    print(zeros_count)
+    print(ones_count)
+
+    # data_loader = DataLoader(
+    #         dataset_stock,
+    #         batch_size=32,
+    #         shuffle=True,
+    #         num_workers=0,
+    #         drop_last=True)
+    # for i, (input_seq, target_seq) in enumerate(data_loader):
+    #     print(input_seq.shape)
+    #     print(target_seq.shape)

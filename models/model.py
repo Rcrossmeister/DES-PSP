@@ -27,7 +27,11 @@ class Encoder_CNN(nn.Module):
 
 
 class DES_PSP_Model(nn.Module):
+    '''
+    competitor concept stock encoder extract features by CNN,
+    then add to former presidential concept stock LSTM encoder
 
+    '''
     def __init__(self, input_size=1, hidden_size=64, output_size=1,
                  kernel_size=3, stride=1, padding=1,
                  lstm_num_layers=5, cnn_num_layers=32,
@@ -42,8 +46,8 @@ class DES_PSP_Model(nn.Module):
         self.decoder = Decoder_LSTM(input_size, hidden_size, output_size, lstm_num_layers, dropout)
 
     def forward(self, x, y):
-        # x: [batch, seq_len, input_size]
-        # y: [1, channel, stock_num, seq_len]
+        # x: [batch, seq_len, input_size] former presidential concept stock
+        # y: [1, channel, stock_num, seq_len] all competitor concept stock
         encoder_hidden, encoder_cell = self.encoder_lstm(x)  # hidden: [num_layers, batch, hidden_size]
         features = self.encoder_cnn(y)       # features: [1, 1, hidden_size]
         features = features.expand(self.lstm_num_layers, encoder_hidden.shape[1], self.hidden_size)
