@@ -147,7 +147,9 @@ class Exp_DES_PSP(Exp_Basic):
 
         self.logger.info('Start loading data...')
         train_data_set, train_data_loader = self._get_data('train')
+        # 相比于baseline，多了一个competitor data set
         train_competitor_data_set = self._get_competitor_data('train')
+        # 因为我们另外一个encoder用的是CNN，所以这里直接把competitor当成一个matrix输入进去
         train_competitor_matrix = train_competitor_data_set[0]
         train_competitor_tensor = torch.from_numpy(train_competitor_matrix).float().to(self.device)
         self.logger.info('Train data loaded successfully!')

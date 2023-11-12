@@ -27,18 +27,20 @@ class Exp_Baseline(Exp_Basic):  # 继承Exp_Basic基类
 
         current_datetime = time.strftime("%Y-%m-%d_%H-%M")
         if self.args.test_only:
+            # 在大的文件夹里面(result_path=result_88)，每次跑的实验自动生成在eg "price_lstm_2020-10-29"
             self.output_path = os.path.join(self.args.test_results_path, f'{self.args.target}_{self.args.model}_{current_datetime}')
         else:
             self.output_path = os.path.join(self.args.results_path, f'{self.args.target}_{self.args.model}_{current_datetime}')
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
-        
+
+        # 每次在初始化的时候，就会调用init_logger把时间和INFO，WARNING等等写进去
         self.logger = init_logger(self.output_path)
 
     def _build_model(self):
         model_dict = {
-            'seq2seq_lstm': Seq2Seq_LSTM,
-            'seq2seq_bilstm': Seq2Seq_BiLSTM,
+            'seq2seq_lstm': Seq2Seq_LSTM,  # class from models.baseline_model
+            'seq2seq_bilstm': Seq2Seq_BiLSTM,  # class from models.baseline_model
             'seq2seq_gru': Seq2Seq_GRU,
             'seq2seq_bigru': Seq2Seq_BiGRU,
             'lstm': LSTM,
@@ -47,6 +49,8 @@ class Exp_Baseline(Exp_Basic):  # 继承Exp_Basic基类
             'bigru': BiGRU,
             'cnn_lstm': CNN_LSTM
         }
+        # model_dict[self.args.model] eg: model_dict["lstm"]等价于LSTM这个class
+        # 下面这个就是对这个class输入参数
         model = model_dict[self.args.model](
             self.args.input_size,
             self.args.hidden_size, 
@@ -58,20 +62,23 @@ class Exp_Baseline(Exp_Basic):  # 继承Exp_Basic基类
         return model
     
     def _get_data(self, flag):
+        # 在这里先更改好了，下面就可以直接塞进去，因为不同的数据集需要的不一样
         if flag == 'train':
+            # 训练集需要shuffle
             shuffle_flag = True
             drop_last = False
-            batch_size = self.args.batch_size
-            data_path = self.args.all_data_path
-            start_date = self.args.data_start_date
-            end_date = self.args.data_end_date
+            # batch_size要定的大一点
+            batch_size = self.args.batch_size  # 512
+            data_path = self.args.all_data_path  # All_Data.csv
+            start_date = self.args.data_start_date  # '2015/11/09'
+            end_date = self.args.data_end_date  # '2016/11/08'
         elif flag == 'val':
             shuffle_flag = False
             drop_last = False
-            batch_size = self.args.batch_size
-            data_path = self.args.biden_data_path
-            start_date = self.args.val_start_date
-            end_date = self.args.val_end_date
+            batch_size = self.args.batch_size  # 512
+            data_path = self.args.biden_data_path  # 'GroupA.csv'
+            start_date = self.args.val_start_date  # '2019/12/15'
+            end_date = self.args.val_end_date  # '2020/12/14'
         else:
             shuffle_flag = False
             drop_last = False
@@ -104,6 +111,7 @@ class Exp_Baseline(Exp_Basic):  # 继承Exp_Basic基类
         return optimizer
     
     def _set_criterion(self):
+        # 封装是因为price和movement对应的损失函数不一样
         if self.args.target == 'price':
             criterion = nn.MSELoss()
         else:
@@ -111,47 +119,57 @@ class Exp_Baseline(Exp_Basic):  # 继承Exp_Basic基类
         return criterion
     
     def train(self):
+        # 将args这个对象转化成一个字典，就可以用pprint打印出来
         arg_dict = vars(self.args)
         pp = pprint.PrettyPrinter(indent=4)
+        # logger.info往logger和控制台里面输入前面的arg_dict
         self.logger.info(pp.pformat(arg_dict))
-
+        # logger.info往logger和控制台里面输入'Start loading data...'这句话
         self.logger.info('Start loading data...')
-
+        # 前面_get_data返回一个dataset和data loader
         train_data_set, train_data_loader = self._get_data('train')
         self.logger.info('Train data loaded successfully!')
-
+        # 同理，load val data
         val_data_set, val_data_loader = self._get_data('val')
         self.logger.info('Val data loaded successfully!')
-
+        # 同理，load test data
         test_data_set, test_data_loader = self._get_data('test')
         self.logger.info('Test data loaded successfully!')
 
         time_now = time.time()
-
+        # 设置优化器和损失函数
         optim = self._set_optim()
         criterion = self._set_criterion()
-
+        # logger：Start training...
         self.logger.info('Start training...')
+        # 记录train_loss 和 val_loss，就可以画图
         all_train_loss = []
         all_val_loss = []
-        for epoch in range(self.args.epochs):
+
+        for epoch in range(self.args.epochs):  # 100
             self.model.train()
             train_loss = []
             for i, (input_seq, target_seq) in enumerate(train_data_loader):
                 input_seq = input_seq.to(self.device)
                 target_seq = target_seq.to(self.device)
+
+                # 前向传播
                 output_seq = self.model(input_seq)
                 loss = criterion(output_seq, target_seq)
                 train_loss.append(loss.item())
+
+                # 反向传播
                 optim.zero_grad()
                 loss.backward()
                 optim.step()
+                # 记录epoch，Step指第i个batch
                 self.logger.info(f"Epoch: {epoch}, Step: {i}, Loss: {loss.item():.10f}")
                 # if loss.item() > 1000:
                 #     print(input_seq)
                 #     print(target_seq)
                 #     exit(0)
             current_train_loss = np.mean(train_loss)
+            # current_train_loss记录一个epoch的loss的平均
             self.logger.info(f"Epoch: {epoch}, Train Loss: {current_train_loss:.10f}")
             val_loss, val_targets, val_outputs  = self.val(val_data_set, val_data_loader, criterion)
             self.logger.info(f"Epoch: {epoch}, Val Loss: {val_loss:.10f}")
@@ -168,6 +186,7 @@ class Exp_Baseline(Exp_Basic):  # 继承Exp_Basic基类
         self.test(test_data_set, test_data_loader, criterion)
 
         self.logger.info('Start saving model...')
+        # 保存最后一个epoch的模型信息，类似于加强版的ckpt
         torch.save(self.model.state_dict(), os.path.join(self.output_path, f'{self.args.model}.pth'))
 
     def val(self, val_data, val_loader, criterion):
@@ -179,6 +198,7 @@ class Exp_Baseline(Exp_Basic):  # 继承Exp_Basic基类
             input_seq = input_seq.to(self.device)
             target_seq = target_seq.to(self.device)
             output_seq = self.model(input_seq)
+            # detach()从gpu拿出来，否则很容易爆显存
             all_targets.append(target_seq.detach().cpu())
             all_outputs.append(output_seq.detach().cpu())
             loss = criterion(output_seq, target_seq)
@@ -242,8 +262,9 @@ class Exp_Baseline(Exp_Basic):  # 继承Exp_Basic基类
                     'MCC': mcc.item()
                 },
             }
-
+        # 将metrics写入json
         with open(os.path.join(self.output_path, 'metrics.json'), 'w') as f:
+            # 四个缩进，没缩进就会挤在一行，有缩进就好看很多
             json.dump(metrics, f, indent=4)
 
 
