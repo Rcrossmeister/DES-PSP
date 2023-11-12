@@ -16,3 +16,21 @@ class StandardScaler():
 
     def inverse_transform(self, data):
         return (data * self.std) + self.mean
+
+class MinMaxScaler:
+    def __init__(self):
+        self.min = None
+        self.max = None
+
+    def fit(self, data):
+        self.min = np.min(data, axis=1, keepdims=True)
+        self.max = np.max(data, axis=1, keepdims=True)
+
+    def transform(self, data):
+        # 防止除以零
+        range = self.max - self.min
+        range[range == 0] = 1
+        return (data - self.min) / range
+
+    def inverse_transform(self, data):
+        return data * (self.max - self.min) + self.min
