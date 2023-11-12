@@ -60,6 +60,7 @@ parser.add_argument('--test_end_date', type=str, default='2020/12/14', help='tes
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
+torch.cuda.manual_seed(args.seed)
 torch.backends.cudnn.deterministic = True
 
 

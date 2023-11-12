@@ -265,8 +265,41 @@ class BiGRU(nn.Module):
         output_seq = self.fc(out_).unsqueeze(-1)
         return output_seq
 
+class CNN_LSTM(nn.Module):
+    def __init__(self, input_size=1, hidden_size=64, output_size=1, pred_len=14, num_layers=5, dropout=0.2):
+        super(CNN_LSTM, self).__init__()
+        self.relu = nn.ReLU(inplace=True)
+        # (batch_size=30, seq_len=24, input_size=7) ---> permute(0, 2, 1)
+        # (30, 7, 24)
+        # self.conv = nn.Sequential(
+        #     nn.Conv1d(in_channels=args.in_channels, out_channels=args.out_channels, kernel_size=3),
+        #     nn.ReLU(),
+        #     nn.MaxPool1d(kernel_size=3, stride=1)
+        # )
+
+        self.conv1 = nn.Conv1d(in_channels=input_size, out_channels=hidden_size, kernel_size=3)
+        self.maxpool = nn.MaxPool1d(kernel_size=3, stride=1)
+
+        self.lstm = nn.LSTM(input_size=hidden_size, hidden_size=hidden_size,
+                            num_layers=num_layers, batch_first=True, dropout=dropout)
+        self.fc = nn.Linear(hidden_size, pred_len)
+
+    def forward(self, x):
+        x = x.permute(0, 2, 1)
+        x = self.conv1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        x = x.permute(0, 2, 1)
+        x, (hidden, cell) = self.lstm(x)
+        x = self.fc(hidden[0]).unsqueeze(-1)
+
+        return x
+
+
+
+
 if __name__ == '__main__':
     input_seq = torch.randn(512, 366, 1).to('cuda')
-    model = Seq2Seq_LSTM(1, 64, 1, 14, 5, 0.5).to('cuda')
+    model = CNN_LSTM().to('cuda')
     output_seq = model(input_seq)
     print(output_seq.shape)
