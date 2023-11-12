@@ -4,8 +4,9 @@ import pandas as pd
 
 import torch
 from torch.utils.data import Dataset, DataLoader
-from utils.tools import init_logger, prepare_data, remove_invalid_stocks
-from utils.scaler import StandardScaler
+from utils.tools import init_logger, prepare_data, remove_invalid_stocks, remove_zeros_row
+from utils.scaler import StandardScaler, MinMaxScaler
+
 
 class Dataset_Stock(Dataset):
     def __init__(self, root_path='df_path', data_path='All_Data.csv', target='price',
@@ -13,6 +14,7 @@ class Dataset_Stock(Dataset):
                  remove_invalid=False, flag='train', scale=True, inverse=False):
         assert flag in ['train', 'test', 'val']
         type_map = {'train':0, 'val':1, 'test':2}
+        self.flag = flag
         self.set_type = type_map[flag]
         self.target = target
         self.start_date = start_date
@@ -23,21 +25,24 @@ class Dataset_Stock(Dataset):
         self.remove_invalid = remove_invalid
         self.root_path = root_path
         self.data_path = data_path
-        self.input_scaler = StandardScaler()
-        # self.target_scaler = StandardScaler()
+        self.scaler = MinMaxScaler()
         self.__read_data__()
 
     def __read_data__(self):
         df_path = os.path.join(self.root_path, self.data_path)
         self.input_data, self.target_data = prepare_data(df_path, self.start_date, self.end_date, self.pred_len, self.target)
+        self.input_data, self.target_data = remove_zeros_row(self.input_data, self.target_data)
         if self.remove_invalid:
             self.input_data, self.target_data = remove_invalid_stocks(self.input_data, self.target_data)
         if self.scale:
-            self.input_scaler.fit(self.input_data)
-            self.input_data = self.input_scaler.transform(self.input_data)
+            if self.flag == 'train':
+                self.scaler.fit(self.input_data)
+            else:
+                self.scaler.fit(self.input_data)
+            self.input_data = self.scaler.transform(self.input_data)
             if self.target == 'price':
-                self.input_scaler.fit(self.target_data)
-                self.target_data = self.input_scaler.transform(self.target_data)
+                self.target_data = self.scaler.transform(self.target_data)
+
         self.input_data = self.input_data.reshape(self.input_data.shape[0], self.input_data.shape[1], 1)
         self.target_data = self.target_data.reshape(self.target_data.shape[0], self.target_data.shape[1], 1)
         self.input_data = self.input_data.astype(np.float32)
@@ -76,9 +81,6 @@ class DataSet_Competitor(Dataset):
         if self.scale:
             self.input_scaler.fit(self.input_data)
             self.input_data = self.input_scaler.transform(self.input_data)
-            if self.target == 'price':
-                self.input_scaler.fit(self.target_data)
-                self.target_data = self.input_scaler.transform(self.target_data)
         self.input_data = self.input_data.reshape(self.input_data.shape[0], self.input_data.shape[1], 1)
         self.input_data = self.input_data.astype(np.float32)
 

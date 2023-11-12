@@ -79,8 +79,15 @@ def remove_invalid_stocks(input_data, target_data):
     return (input_data[valid_stocks], target_data[valid_stocks])
 
 
+def remove_zeros_row(input_data, target_data):
+    all = np.hstack((input_data, target_data))
+    mask = ~(all == 0).any(axis=1)
+    filtered = all[mask]
+    return filtered[:, :input_data.shape[1]], filtered[:, input_data.shape[1]:]
+
+
 if __name__ == '__main__':
-    df_path = '/home/hzj/NLP1/StockPricePrediction/rc_ross/All_Data.csv'
+    df_path = '../df_path/All_Data.csv'
     data_start_date = '2015/11/09'
     data_end_date = '2016/11/08'
 
@@ -92,7 +99,6 @@ if __name__ == '__main__':
     train_input_data, train_target_data = prepare_data(df_path, data_start_date, data_end_date, pred_steps)
     val_input_data, val_target_data = prepare_data(df_path, val_start_date, val_end_date, pred_steps)
 
-    train_input_data, train_target_data, val_input_data, val_target_data = remove_invalid_stocks(train_input_data,
-                                                                                                train_target_data,
-                                                                                                val_input_data,
-                                                                                                val_target_data)
+    print(train_input_data.shape)
+    t_input, t_target = remove_zeros_row(train_input_data, train_target_data)
+    print(t_input.shape)
