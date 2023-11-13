@@ -1,4 +1,5 @@
 from data_loader.data_loader import Dataset_Stock
+from data_loader.data_npy import Dataset_npy
 from exp.exp_basic import Exp_Basic
 from utils.plotter import plot_loss
 from utils.metrics import compute_metrics, acc, MCC
@@ -58,29 +59,44 @@ class Exp_Baseline(Exp_Basic):
         return model
     
     def _get_data(self, flag):
+        dataset_dict = {
+            'stock': Dataset_Stock,
+            'npy': Dataset_npy,
+        }
         if flag == 'train':
+            if self.args.npy:
+                dataset = dataset_dict['npy']
+                root_path = self.args.npy_path
+                data_path = self.args.npy_all_data_path
+            else:
+                dataset = dataset_dict['stock']
+                root_path = self.args.root_path
+                data_path = self.args.all_data_path
             shuffle_flag = True
             drop_last = False
             batch_size = self.args.batch_size
-            data_path = self.args.all_data_path
             start_date = self.args.data_start_date
             end_date = self.args.data_end_date
         elif flag == 'val':
+            dataset = dataset_dict['stock']
             shuffle_flag = False
             drop_last = False
             batch_size = self.args.batch_size
+            root_path = self.args.root_path
             data_path = self.args.biden_data_path
             start_date = self.args.val_start_date
             end_date = self.args.val_end_date
         else:
+            dataset = dataset_dict['stock']
             shuffle_flag = False
             drop_last = False
             batch_size = self.args.batch_size
+            root_path = self.args.root_path
             data_path = self.args.biden_data_path
             start_date = self.args.test_start_date
             end_date = self.args.test_end_date
-        data_set = Dataset_Stock(
-            root_path=self.args.root_path,
+        data_set = dataset(
+            root_path=root_path,
             data_path=data_path,
             target=self.args.target,
             start_date=start_date,
@@ -153,7 +169,7 @@ class Exp_Baseline(Exp_Basic):
                 #     exit(0)
             current_train_loss = np.mean(train_loss)
             self.logger.info(f"Epoch: {epoch}, Train Loss: {current_train_loss:.10f}")
-            val_loss, val_targets, val_outputs  = self.val(val_data_set, val_data_loader, criterion)
+            val_loss, val_targets, val_outputs = self.val(val_data_set, val_data_loader, criterion)
             self.logger.info(f"Epoch: {epoch}, Val Loss: {val_loss:.10f}")
 
             all_train_loss.append(current_train_loss)

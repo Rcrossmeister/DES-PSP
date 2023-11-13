@@ -23,6 +23,10 @@ parser.add_argument('--remove_invalid', type=bool, default=False, help='remove i
 parser.add_argument('--scale', type=bool, default=True, help='scale data')
 parser.add_argument('--inverse', type=bool, default=False, help='inverse data')
 
+parser.add_argument('--npy', type=bool, default=False, help='use npy data')
+parser.add_argument('--npy_path', type=str, default='npy_path/', help='npy data path')
+parser.add_argument('--npy_all_data_path', type=str, default='all_target.npy', help='npy data path')
+
 # date config
 parser.add_argument('--data_start_date', type=str, default='2015/11/09', help='data start date')
 parser.add_argument('--data_end_date', type=str, default='2016/11/08', help='data end date')
@@ -31,7 +35,7 @@ parser.add_argument('--val_end_date', type=str, default='2020/12/14', help='vali
 parser.add_argument('--pred_steps', type=int, default=14, help='prediction steps')
 
 # model config
-parser.add_argument('--target', type=str, default='price', help='target name')
+parser.add_argument('--target', type=str, default='price', help='target name, option[price, movement]')
 parser.add_argument('--model', type=str, default='lstm', help='model name')
 parser.add_argument('--input_size', type=int, default=1, help='input size')
 parser.add_argument('--hidden_size', type=int, default=64, help='hidden size')

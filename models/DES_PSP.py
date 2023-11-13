@@ -30,7 +30,6 @@ class DES_PSP_Model(nn.Module):
     '''
     competitor concept stock encoder extract features by CNN,
     then add to former presidential concept stock LSTM encoder
-
     '''
     def __init__(self, input_size=1, hidden_size=64, output_size=1,
                  kernel_size=3, stride=1, padding=1,
@@ -71,6 +70,9 @@ if __name__ == '__main__':
     input_seq_2 = input_seq_2.permute(0, 3, 1, 2)
 
     model = DES_PSP_Model().to(device)
+    # from torchinfo import summary
+    #
+    # summary(model)
 
-    output = model(input_seq_1, input_seq_2)
-    print(output.shape)
+    # output = model(input_seq_1, input_seq_2)
+    # print(output.shape)

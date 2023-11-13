@@ -25,23 +25,22 @@ class Dataset_Stock(Dataset):
         self.remove_invalid = remove_invalid
         self.root_path = root_path
         self.data_path = data_path
-        self.scaler = MinMaxScaler()
+        self.input_scaler = StandardScaler()
+        self.target_scaler = StandardScaler()
         self.__read_data__()
 
     def __read_data__(self):
         df_path = os.path.join(self.root_path, self.data_path)
         self.input_data, self.target_data = prepare_data(df_path, self.start_date, self.end_date, self.pred_len, self.target)
-        self.input_data, self.target_data = remove_zeros_row(self.input_data, self.target_data)
+        # self.input_data, self.target_data = remove_zeros_row(self.input_data, self.target_data)
         if self.remove_invalid:
             self.input_data, self.target_data = remove_invalid_stocks(self.input_data, self.target_data)
         if self.scale:
-            if self.flag == 'train':
-                self.scaler.fit(self.input_data)
-            else:
-                self.scaler.fit(self.input_data)
-            self.input_data = self.scaler.transform(self.input_data)
+            self.input_scaler.fit(self.input_data)
+            self.input_data = self.input_scaler.transform(self.input_data)
             if self.target == 'price':
-                self.target_data = self.scaler.transform(self.target_data)
+                self.target_scaler.fit(self.target_data)
+                self.target_data = self.target_scaler.transform(self.target_data)
 
         self.input_data = self.input_data.reshape(self.input_data.shape[0], self.input_data.shape[1], 1)
         self.target_data = self.target_data.reshape(self.target_data.shape[0], self.target_data.shape[1], 1)
