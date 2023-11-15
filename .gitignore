@@ -16,3 +16,4 @@ Review.md
 /test
 /waste
 *.ipynb
+/npy*

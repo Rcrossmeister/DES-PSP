@@ -12,24 +12,34 @@ parser = argparse.ArgumentParser(description='stock prediction')
 
 # mode
 parser.add_argument('--mode', type=str, default='train', help='train/val/test')
+parser.add_argument('--pred_steps', type=int, default=14, help='prediction steps')
 
-# data config
-parser.add_argument('--root_path', type=str, default='df_path/', help='data frame path')
-parser.add_argument('--all_data_path', type=str, default='All_Data.csv', help='data file name')
-parser.add_argument('--trump_data_path', type=str, default='GroupB.csv', help='trump data file name')
-parser.add_argument('--biden_data_path', type=str, default='GroupA.csv', help='biden data file name')
-parser.add_argument('--other_data_path', type=str, default='GroupC.csv', help='other data file name')
+# data path
+parser.add_argument('--root_path', type=str, default='npy_path/', help='npy path')
+parser.add_argument('--train_data_path', type=str, default='08', help='train data file path')
+parser.add_argument('--val_data_path', type=str, default='11', help='val data file path')
+parser.add_argument('--test_data_path', type=str, default='11', help='test data file path')
+# train data name
+parser.add_argument('--train_input_file', type=str, default='pre_input.npy', help='train data input file name')
+parser.add_argument('--train_competitor_file', type=str, default='com_input.npy', help='train data competitor file name')
+parser.add_argument('--train_target_pr_file', type=str, default='pre_target_pr.npy', help='train data target price file name')
+parser.add_argument('--train_target_mo_file', type=str, default='pre_target_mo.npy', help='train data target movement file name')
+# val data name
+parser.add_argument('--val_input_file', type=str, default='pre_input.npy', help='val data file name')
+parser.add_argument('--val_competitor_file', type=str, default='com_input.npy', help='val data competitor file name')
+parser.add_argument('--val_target_pr_file', type=str, default='pre_target_pr.npy', help='val data target price file name')
+parser.add_argument('--val_target_mo_file', type=str, default='pre_target_mo.npy', help='val data target movement file name')
+# test data name
+parser.add_argument('--test_input_file', type=str, default='pre_input.npy', help='test data file name')
+parser.add_argument('--test_competitor_file', type=str, default='com_input.npy', help='test data competitor file name')
+parser.add_argument('--test_target_pr_file', type=str, default='pre_target_pr.npy', help='test target price data file name')
+parser.add_argument('--test_target_mo_file', type=str, default='pre_target_mo.npy', help='test target movement data file name')
+# results path
 parser.add_argument('--results_path', type=str, default='results_88', help='result path')
-parser.add_argument('--remove_invalid', type=bool, default=False, help='remove invalid stocks')
+
+# scale config
 parser.add_argument('--scale', type=bool, default=True, help='scale data')
 parser.add_argument('--inverse', type=bool, default=False, help='inverse data')
-
-# date config
-parser.add_argument('--data_start_date', type=str, default='2015/11/09', help='data start date')
-parser.add_argument('--data_end_date', type=str, default='2016/11/08', help='data end date')
-parser.add_argument('--val_start_date', type=str, default='2019/12/15', help='validation start date')
-parser.add_argument('--val_end_date', type=str, default='2020/12/14', help='validation end date')
-parser.add_argument('--pred_steps', type=int, default=14, help='prediction steps')
 
 # model config
 parser.add_argument('--target', type=str, default='price', help='target name')

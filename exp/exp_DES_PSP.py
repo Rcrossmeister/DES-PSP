@@ -1,4 +1,4 @@
-from data_loader.data_loader import Dataset_Stock, DataSet_Competitor
+from data_loader.data_npy import Dataset_Stock, DataSet_Competitor
 from exp.exp_basic import Exp_Basic
 from models.DES_PSP import DES_PSP_Model
 from models.DES_PSP_L import DES_PSP_L_Model
@@ -54,44 +54,57 @@ class Exp_DES_PSP(Exp_Basic):
             pred_steps=self.args.pred_steps,
             dropout=self.args.dropout)
 
-        if self.args.use_multi_gpu:
-            model = nn.DataParallel(model, device_ids=self.args.device_ids)
         return model
 
     def _get_data(self, flag):
+        dataset_dict = {
+            'stock': Dataset_Stock,
+        }
         if flag == 'train':
+            dataset = dataset_dict['stock']
+            root_path = self.args.root_path
+            data_path = self.args.train_data_path
+            input_file = self.args.train_input_file
+            target_pr_file = self.args.train_target_pr_file
+            target_mo_file = self.args.train_target_mo_file
+
             shuffle_flag = True
             drop_last = False
             batch_size = self.args.batch_size
-            data_path = self.args.other_data_path
-            start_date = self.args.data_start_date
-            end_date = self.args.data_end_date
         elif flag == 'val':
-            shuffle_flag = False
-            drop_last = False
-            batch_size = self.args.batch_size
-            data_path = self.args.biden_data_path
-            start_date = self.args.val_start_date
-            end_date = self.args.val_end_date
-        else:
-            shuffle_flag = False
-            drop_last = False
-            batch_size = self.args.batch_size
-            data_path = self.args.biden_data_path
-            start_date = self.args.val_start_date
-            end_date = self.args.val_end_date
+            dataset = dataset_dict['stock']
+            root_path = self.args.root_path
+            data_path = self.args.val_data_path
+            input_file = self.args.val_input_file
+            target_pr_file = self.args.val_target_pr_file
+            target_mo_file = self.args.val_target_mo_file
 
-        data_set = Dataset_Stock(
-            root_path=self.args.root_path,
+            shuffle_flag = False
+            drop_last = False
+            batch_size = self.args.batch_size
+        else:
+            dataset = dataset_dict['stock']
+            root_path = self.args.root_path
+            data_path = self.args.test_data_path
+            input_file = self.args.test_input_file
+            target_pr_file = self.args.test_target_pr_file
+            target_mo_file = self.args.test_target_mo_file
+
+            shuffle_flag = False
+            drop_last = False
+            batch_size = self.args.batch_size
+        data_set = dataset(
+            root_path=root_path,
             data_path=data_path,
+            input_file=input_file,
+            target_pr_file=target_pr_file,
+            target_mo_file=target_mo_file,
             target=self.args.target,
-            start_date=start_date,
-            end_date=end_date,
             pred_len=self.args.pred_steps,
-            remove_invalid=self.args.remove_invalid,
             flag=flag,
             scale=self.args.scale,
             inverse=self.args.inverse)
+
         data_loader = DataLoader(
             data_set,
             batch_size=batch_size,
@@ -106,25 +119,21 @@ class Exp_DES_PSP(Exp_Basic):
 
     def _get_competitor_data(self, flag):
         if flag == 'train':
-            data_path = self.args.other_data_path
-            start_date = self.args.data_start_date
-            end_date = self.args.data_end_date
+            root_path = self.args.root_path
+            data_path = self.args.train_data_path
+            input_file = self.args.train_input_file
         elif flag == 'val':
-            data_path = self.args.trump_data_path
-            start_date = self.args.val_start_date
-            end_date = self.args.val_end_date
+            root_path = self.args.root_path
+            data_path = self.args.val_data_path
+            input_file = self.args.val_input_file
         else:
-            data_path = self.args.trump_data_path
-            start_date = self.args.val_start_date
-            end_date = self.args.val_end_date
+            root_path = self.args.root_path
+            data_path = self.args.val_data_path
+            input_file = self.args.val_input_file
         data_set = DataSet_Competitor(
-            root_path=self.args.root_path,
-            data_path=data_path,
-            target=self.args.target,
-            start_date=start_date,
-            end_date=end_date,
-            pred_len=self.args.pred_steps,
-            remove_invalid=self.args.remove_invalid,
+            root_path='npy_path',
+            data_path='08',
+            input_file='com_input.npy',
             flag=flag,
             scale=self.args.scale,
             inverse=self.args.inverse)

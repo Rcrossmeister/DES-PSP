@@ -1,5 +1,4 @@
-from data_loader.data_loader import Dataset_Stock
-from data_loader.data_npy import Dataset_npy
+from data_loader.data_npy import Dataset_Stock
 from exp.exp_basic import Exp_Basic
 from utils.plotter import plot_loss
 from utils.metrics import compute_metrics, acc, MCC
@@ -61,48 +60,48 @@ class Exp_Baseline(Exp_Basic):
     def _get_data(self, flag):
         dataset_dict = {
             'stock': Dataset_Stock,
-            'npy': Dataset_npy,
         }
         if flag == 'train':
-            if self.args.npy:
-                dataset = dataset_dict['npy']
-                root_path = self.args.npy_path
-                data_path = self.args.npy_all_data_path
-            else:
-                dataset = dataset_dict['stock']
-                root_path = self.args.root_path
-                data_path = self.args.all_data_path
+            dataset = dataset_dict['stock']
+            root_path = self.args.root_path
+            data_path = self.args.train_data_path
+            input_file = self.args.train_input_file
+            target_pr_file = self.args.train_target_pr_file
+            target_mo_file = self.args.train_target_mo_file
+
             shuffle_flag = True
             drop_last = False
             batch_size = self.args.batch_size
-            start_date = self.args.data_start_date
-            end_date = self.args.data_end_date
         elif flag == 'val':
             dataset = dataset_dict['stock']
+            root_path = self.args.root_path
+            data_path = self.args.val_data_path
+            input_file = self.args.val_input_file
+            target_pr_file = self.args.val_target_pr_file
+            target_mo_file = self.args.val_target_mo_file
+
             shuffle_flag = False
             drop_last = False
             batch_size = self.args.batch_size
-            root_path = self.args.root_path
-            data_path = self.args.biden_data_path
-            start_date = self.args.val_start_date
-            end_date = self.args.val_end_date
         else:
             dataset = dataset_dict['stock']
+            root_path = self.args.root_path
+            data_path = self.args.test_data_path
+            input_file = self.args.test_input_file
+            target_pr_file = self.args.test_target_pr_file
+            target_mo_file = self.args.test_target_mo_file
+
             shuffle_flag = False
             drop_last = False
             batch_size = self.args.batch_size
-            root_path = self.args.root_path
-            data_path = self.args.biden_data_path
-            start_date = self.args.test_start_date
-            end_date = self.args.test_end_date
         data_set = dataset(
             root_path=root_path,
             data_path=data_path,
+            input_file=input_file,
+            target_pr_file=target_pr_file,
+            target_mo_file=target_mo_file,
             target=self.args.target,
-            start_date=start_date,
-            end_date=end_date,
             pred_len=self.args.pred_steps,
-            remove_invalid=self.args.remove_invalid,
             flag=flag,
             scale=self.args.scale,
             inverse=self.args.inverse)
