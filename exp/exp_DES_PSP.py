@@ -3,7 +3,6 @@ from exp.exp_basic import Exp_Basic
 from models.DES_PSP import DES_PSP_Model
 from models.DES_PSP_L import DES_PSP_L_Model
 from utils.plotter import plot_loss
-from utils.metrics import compute_metrics, acc, MCC
 from utils.metrics_new import regression_metrics, classification_metrics, calculate_label_num
 from utils.tools import init_logger
 
@@ -175,7 +174,7 @@ class Exp_DES_PSP(Exp_Basic):
         self.logger.info('Start training...')
         all_train_loss = []
         all_val_loss = []
-
+        last_val_loss = float('inf')
 
         for epoch in range(self.args.epochs):
             self.model.train()
@@ -190,26 +189,29 @@ class Exp_DES_PSP(Exp_Basic):
                 optim.zero_grad()
                 loss.backward()
                 optim.step()
-                self.logger.info(f"Epoch: {epoch}, Step: {i}, Loss: {loss.item():.10f}")
+                # self.logger.info(f"Epoch: {epoch}, Step: {i}, Loss: {loss.item():.10f}")
             train_competitor_tensor = train_competitor_tensor.detach().cpu()
             current_train_loss = np.mean(train_loss)
             self.logger.info(f"Epoch: {epoch}, Train Loss: {current_train_loss:.10f}")
 
             val_loss, val_targets, val_outputs = self.val(val_data_set, val_data_loader, val_competitor_tensor, criterion)
-            self.logger.info(f"Epoch: {epoch}, Val Loss: {val_loss:.10f}")
+            self.logger.info(f"Epoch: {epoch}, Val Loss: {val_loss:.10f}, Last Val Loss: {last_val_loss:.10f}")
 
             all_train_loss.append(current_train_loss)
             all_val_loss.append(val_loss)
 
-            # save ckpt
-            torch.save(self.model.state_dict(), os.path.join(self.output_path, f'ckp/{epoch:04}.pth'))
+            if val_loss < last_val_loss:
+                # save ckpt
+                self.logger.info(f"Saving ckpt...")
+                torch.save(self.model.state_dict(), os.path.join(self.output_path, f'ckpt.pth'))
 
+        torch.save(self.model.state_dict(), os.path.join(self.output_path, f'last.pth'))
         self.logger.info(f"Training finished, total training time: {time.time() - time_now:.4f}s")
         plot_loss('train_loss', all_train_loss, self.output_path)
         plot_loss('val_loss', all_val_loss, self.output_path)
 
         self.logger.info('Testing...')
-        self.test(test_data_set, test_data_loader, test_competitor_tensor, criterion)
+        self.test_best_ckpt(test_data_set, test_data_loader, test_competitor_tensor, criterion)
 
 
 
@@ -229,7 +231,7 @@ class Exp_DES_PSP(Exp_Basic):
             val_loss.append(loss.item())
         return np.mean(val_loss), all_target, all_output
 
-    def test(self, test_data_set, test_data_loader, test_competitor, criterion):
+    def test(self, test_data_set, test_data_loader, test_competitor, criterion, test_results_file='metrics.json'):
         self.model.eval()
         test_loss, test_targets, test_outputs = self.val(test_data_set, test_data_loader, test_competitor, criterion)
         all_test_targets = torch.cat(test_targets, dim=0)
@@ -247,18 +249,13 @@ class Exp_DES_PSP(Exp_Basic):
                                 FDE:{fde}
             ''')
             # save as json
-            metrics = {
-                'Model': self.args.model,
-                'target': self.args.target,
-                'Metrics': {
-                    'MSE': mse_score.item(),
-                    'RMSE': rmse_score.item(),
-                    'MAE': mae_score.item(),
-                    'ADE': ade.item(),
-                    'FDE': fde.item()
-                },
+            test_metrix = {
+                'MSE': mse_score.item(),
+                'RMSE': rmse_score.item(),
+                'MAE': mae_score.item(),
+                'ADE': ade.item(),
+                'FDE': fde.item()
             }
-
         else:
             threshold = 0.5
             all_test_outputs = torch.sigmoid(all_test_outputs)
@@ -277,19 +274,37 @@ class Exp_DES_PSP(Exp_Basic):
                                 MCC:{mcc}
             ''')
             # save as json
-            metrics = {
-                'Model': self.args.model,
-                'target': self.args.target,
-                'Metrics': {
-                    'Accuracy': acc.item(),
-                    'F1': f1.item(),
-                    'MCC': mcc.item()
-                },
+            test_metrix = {
+                'Accuracy': acc.item(),
+                'F1': f1.item(),
+                'MCC': mcc.item()
             }
 
-        with open(os.path.join(self.output_path, 'metrics.json'), 'w') as f:
+        metrics = {
+            'Model': self.args.model,
+            'Hyper_Parameters': {
+                'lr': self.args.lr,
+                'batch_size': self.args.batch_size,
+                'epochs': self.args.epochs,
+                'dropout': self.args.dropout,
+                'hidden_size': self.args.hidden_size,
+                'kernel_size': self.args.kernel_size,
+                'stride': self.args.stride,
+                'padding': self.args.padding,
+                'lstm_num_layers': self.args.lstm_num_layers,
+                'cnn_num_layers': self.args.cnn_num_layers,
+                'alpha': self.args.alpha,
+            },
+            'target': self.args.target,
+            'Metrics': test_metrix
+        }
+
+        with open(os.path.join(self.output_path, test_results_file), 'w') as f:
             json.dump(metrics, f, indent=4)
 
+    def test_best_ckpt(self, test_data_set, test_data_loader, test_competitor_tensor, criterion):
+        self.model.load_state_dict(torch.load(os.path.join(self.output_path, 'ckpt.pth'), map_location=self.device))
+        self.test(test_data_set, test_data_loader, test_competitor_tensor, criterion)
 
     def test_on_multi_checkpoint(self):
         test_data_set, test_competitor, test_data_loader = self._get_data('test')
