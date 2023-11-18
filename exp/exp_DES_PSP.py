@@ -204,7 +204,7 @@ class Exp_DES_PSP(Exp_Basic):
                 # save ckpt
                 self.logger.info(f"Saving ckpt...")
                 torch.save(self.model.state_dict(), os.path.join(self.output_path, f'ckpt.pth'))
-
+            last_val_loss = val_loss
         torch.save(self.model.state_dict(), os.path.join(self.output_path, f'last.pth'))
         self.logger.info(f"Training finished, total training time: {time.time() - time_now:.4f}s")
         plot_loss('train_loss', all_train_loss, self.output_path)
