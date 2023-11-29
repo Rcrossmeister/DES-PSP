@@ -218,16 +218,12 @@ class Exp_Baseline(Exp_Basic):
                                 FDE:{fde}
             ''')
             # save as json
-            metrics = {
-                'Model': self.args.model,
-                'target': self.args.target,
-                'Metrics': {
-                    'MSE': mse_score.item(),
-                    'RMSE': rmse_score.item(),
-                    'MAE': mae_score.item(),
-                    'ADE': ade.item(),
-                    'FDE': fde.item()
-                },
+            test_metrix = {
+                'MSE': mse_score.item(),
+                'RMSE': rmse_score.item(),
+                'MAE': mae_score.item(),
+                'ADE': ade.item(),
+                'FDE': fde.item()
             }
 
         else:
@@ -248,15 +244,16 @@ class Exp_Baseline(Exp_Basic):
                                 MCC:{mcc}
             ''')
             # save as json
-            metrics = {
-                'Model': self.args.model,
-                'target': self.args.target,
-                'Metrics': {
-                    'Accuracy': acc.item(),
-                    'F1': f1.item(),
-                    'MCC': mcc.item()
-                },
+            test_metrix = {
+                'Accuracy': acc.item(),
+                'F1': f1.item(),
+                'MCC': mcc.item()
             }
+        metrics = {
+            'Model': self.args.model,
+            'target': self.args.target,
+            'Metrics': test_metrix
+        }
 
         with open(os.path.join(self.output_path, 'metrics.json'), 'w') as f:
             json.dump(metrics, f, indent=4)

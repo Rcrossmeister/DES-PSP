@@ -1,4 +1,5 @@
 from data_loader.data_npy import Dataset_Stock, DataSet_Competitor
+from data_loader.data_noise import Dataset_Noise
 from exp.exp_basic import Exp_Basic
 from models.DES_PSP import DES_PSP_Model
 from models.DES_PSP_L import DES_PSP_L_Model
@@ -14,6 +15,7 @@ from tqdm import tqdm
 import numpy as np
 
 import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import time
 import pprint
 import gc
@@ -30,8 +32,6 @@ class Exp_DES_PSP(Exp_Basic):
             self.output_path = os.path.join(self.args.results_path, f'{self.args.target}_{self.args.model}_{current_datetime}')
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
-        if not os.path.exists(os.path.join(self.output_path, 'ckp')):
-            os.makedirs(os.path.join(self.output_path, 'ckp'))
 
         self.logger = init_logger(self.output_path)
 
@@ -136,7 +136,12 @@ class Exp_DES_PSP(Exp_Basic):
             flag=flag,
             scale=self.args.scale,
             inverse=self.args.inverse)
-
+        if self.args.competitor_noise:
+            data_set = Dataset_Noise(
+                stock_num=data_set[0].shape[2],
+                input_len=data_set[0].shape[3],
+                seed=self.args.seed
+                )
         return data_set
 
 
@@ -175,6 +180,7 @@ class Exp_DES_PSP(Exp_Basic):
         all_train_loss = []
         all_val_loss = []
         last_val_loss = float('inf')
+        best_epoch = 0
 
         for epoch in range(self.args.epochs):
             self.model.train()
@@ -204,7 +210,8 @@ class Exp_DES_PSP(Exp_Basic):
                 # save ckpt
                 self.logger.info(f"Saving ckpt...")
                 torch.save(self.model.state_dict(), os.path.join(self.output_path, f'ckpt.pth'))
-            last_val_loss = val_loss
+                best_epoch = epoch
+                last_val_loss = val_loss
         torch.save(self.model.state_dict(), os.path.join(self.output_path, f'last.pth'))
         self.logger.info(f"Training finished, total training time: {time.time() - time_now:.4f}s")
         plot_loss('train_loss', all_train_loss, self.output_path)
@@ -212,6 +219,7 @@ class Exp_DES_PSP(Exp_Basic):
 
         self.logger.info('Testing...')
         self.test_best_ckpt(test_data_set, test_data_loader, test_competitor_tensor, criterion)
+        print(best_epoch)
 
 
 
@@ -304,7 +312,9 @@ class Exp_DES_PSP(Exp_Basic):
 
     def test_best_ckpt(self, test_data_set, test_data_loader, test_competitor_tensor, criterion):
         self.model.load_state_dict(torch.load(os.path.join(self.output_path, 'ckpt.pth'), map_location=self.device))
-        self.test(test_data_set, test_data_loader, test_competitor_tensor, criterion)
+        self.test(test_data_set, test_data_loader, test_competitor_tensor, criterion, test_results_file='metrics_best.json')
+        self.model.load_state_dict(torch.load(os.path.join(self.output_path, 'last.pth'), map_location=self.device))
+        self.test(test_data_set, test_data_loader, test_competitor_tensor, criterion, test_results_file='metrics_last.json')
 
     def test_on_multi_checkpoint(self):
         test_data_set, test_competitor, test_data_loader = self._get_data('test')

@@ -51,7 +51,7 @@ class DES_PSP_L_Model(nn.Module):
 
         outputs = []
         input_hidden = self.alpha_layer1(features, encoder_hidden)
-        input_cell = self.alpha_layer1(features, encoder_cell)
+        input_cell = self.alpha_layer2(features, encoder_cell)
 
         for _ in range(self.pred_steps):
             out, input_hidden, input_cell = self.decoder(decoder_input, input_hidden, input_cell)

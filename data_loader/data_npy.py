@@ -15,9 +15,10 @@ class Dataset_Stock(Dataset):
         self.input_data = np.load(os.path.join(data_path, input_file))
         if target == 'price':
             self.target_data = np.load(os.path.join(data_path, target_pr_file))
+
         else:
             self.target_data = np.load(os.path.join(data_path, target_mo_file))
-            self.target_data = self.target_data[:, :pred_len]
+        self.target_data = self.target_data[:, :pred_len]
 
         self.input_data = self.input_data.reshape(self.input_data.shape[0], self.input_data.shape[1], 1)
         self.target_data = self.target_data.reshape(self.target_data.shape[0], self.target_data.shape[1], 1)

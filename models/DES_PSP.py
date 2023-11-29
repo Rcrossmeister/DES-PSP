@@ -14,10 +14,16 @@ class Encoder_CNN(nn.Module):
             CNN_layers.append(nn.Conv2d(output_channel, output_channel, kernel_size, stride, padding))
             CNN_layers.append(nn.ReLU(inplace=True))
         self.CNN_layers = nn.Sequential(*CNN_layers)
-
+        # self._initialize_weights()
         # global average pooling
         self.GAP = nn.AdaptiveAvgPool2d((1, 1))
 
+    def _initialize_weights(self):
+        for m in self.CNN_layers:
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
     def forward(self, x):
                                 # x: [batch,  input_channel, height, width], e.g. [1,  1, 3000, 366]
         x = self.CNN_layers(x)  # x: [batch, output_channel, height, width], e.g. [1, 64, 3000, 366]

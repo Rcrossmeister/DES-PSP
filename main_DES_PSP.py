@@ -21,6 +21,7 @@ parser.add_argument('--val_data_path', type=str, default='11', help='val data fi
 parser.add_argument('--test_data_path', type=str, default='11', help='test data file path')
 # train data name
 parser.add_argument('--train_input_file', type=str, default='pre_input.npy', help='train data input file name')
+parser.add_argument('--competitor_noise', type=bool, default=False, help='train data competitor noise')
 parser.add_argument('--train_competitor_file', type=str, default='com_input.npy', help='train data competitor file name')
 parser.add_argument('--train_target_pr_file', type=str, default='pre_target_pr.npy', help='train data target price file name')
 parser.add_argument('--train_target_mo_file', type=str, default='pre_target_mo.npy', help='train data target movement file name')
@@ -57,8 +58,6 @@ parser.add_argument('--dropout', type=float, default=0.2, help='dropout rate')
 
 # device config
 parser.add_argument('--device', type=str, default='cuda:0', help='cuda device')
-parser.add_argument('--use_multi_gpu', action='store_true', help='use multiple gpus', default=False)
-parser.add_argument('--devices', type=str, default='0,1,2,3',help='device ids of multile gpus')
 
 # seed
 parser.add_argument('--seed', type=int, default=88, help='random seed')
@@ -77,11 +76,6 @@ parser.add_argument('--test_results_path', type=str, default=None, help='test re
 
 args = parser.parse_args()
 
-if args.use_multi_gpu:
-    args.devices = args.devices.replace(' ','')
-    device_ids = args.devices.split(',')
-    args.device_ids = [int(id_) for id_ in device_ids]
-    args.device = args.device_ids[0]
 
 torch.manual_seed(args.seed)
 torch.cuda.manual_seed(args.seed)
