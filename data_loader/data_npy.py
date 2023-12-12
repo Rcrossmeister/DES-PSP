@@ -73,10 +73,47 @@ class DataSet_Competitor(Dataset):
         return input_matrix
 
 
+class Dataset_Classification(Dataset):
+    def __init__(self, root_path='npy_path', data_path='08', input_file=None,
+                 target_pr_file=None, target_mo_file=None,
+                 target='classification', pred_len=1, flag='train', scale=True, inverse=False):
+        data_path = os.path.join(root_path, data_path)
+        self.target = target
+        self.flag = flag
+        self.inverse = inverse
+
+        self.com_input = np.load(os.path.join(data_path, 'com_input.npy'))
+        self.pre_input = np.load(os.path.join(data_path, 'pre_input.npy'))
+
+        self.com_target = np.zeros((self.com_input.shape[0], 1, 1))
+        self.pre_target = np.ones((self.pre_input.shape[0], 1, 1))
+
+        self.input_data = np.concatenate((self.com_input, self.pre_input), axis=0)
+        self.target_data = np.concatenate((self.com_target, self.pre_target), axis=0)
+
+        self.input_data = self.input_data.reshape(self.input_data.shape[0], self.input_data.shape[1], 1)
+        self.input_data = self.input_data.astype(np.float32)
+        self.target_data = self.target_data.astype(np.float32)
+
+        self.input_scaler = StandardScaler()
+        self.target_scaler = StandardScaler()
+
+        self.input_scaler.fit(self.input_data)
+        self.input_data = self.input_scaler.transform(self.input_data)
+        if scale:
+            if self.target == 'price':
+                self.target_scaler.fit(self.target_data)
+
+    def __len__(self):
+        return self.input_data.shape[0]
+
+    def __getitem__(self, index):
+        input_seq = self.input_data[index, :, :]  # [index, pred_len, feature=1]
+        target_seq = self.target_data[index, :, :]
+        return input_seq, target_seq  # [batch_size, pred_len, feature=1]
+
+
 if __name__ == '__main__':
-    dataset = Dataset_Stock()
+    dataset = Dataset_Classification(root_path='npy_path_re', data_path='16')
     print(dataset.input_data.shape)
     print(dataset.target_data.shape)
-
-    dataset_com = DataSet_Competitor()
-    print(dataset_com[0].shape)

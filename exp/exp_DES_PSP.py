@@ -1,4 +1,4 @@
-from data_loader.data_npy import Dataset_Stock, DataSet_Competitor
+from data_loader.data_npy import Dataset_Stock, DataSet_Competitor, Dataset_Classification
 from data_loader.data_noise import Dataset_Noise
 from exp.exp_basic import Exp_Basic
 from models.DES_PSP import DES_PSP_Model
@@ -24,6 +24,8 @@ import json
 class Exp_DES_PSP(Exp_Basic):
     def __init__(self, args):
         super(Exp_DES_PSP, self).__init__(args)
+        if self.args.target == 'classification':
+            self.args.pred_steps = 1
 
         current_datetime = time.strftime("%Y-%m-%d_%H-%M")
         if self.args.test_only:
@@ -58,9 +60,13 @@ class Exp_DES_PSP(Exp_Basic):
     def _get_data(self, flag):
         dataset_dict = {
             'stock': Dataset_Stock,
+            'classification': Dataset_Classification,
         }
-        if flag == 'train':
+        if self.args.target == 'classification':
+            dataset = dataset_dict['classification']
+        else:
             dataset = dataset_dict['stock']
+        if flag == 'train':
             root_path = self.args.root_path
             data_path = self.args.train_data_path
             input_file = self.args.train_input_file
@@ -71,7 +77,6 @@ class Exp_DES_PSP(Exp_Basic):
             drop_last = False
             batch_size = self.args.batch_size
         elif flag == 'val':
-            dataset = dataset_dict['stock']
             root_path = self.args.root_path
             data_path = self.args.val_data_path
             input_file = self.args.val_input_file
@@ -82,7 +87,6 @@ class Exp_DES_PSP(Exp_Basic):
             drop_last = False
             batch_size = self.args.batch_size
         else:
-            dataset = dataset_dict['stock']
             root_path = self.args.root_path
             data_path = self.args.test_data_path
             input_file = self.args.test_input_file
